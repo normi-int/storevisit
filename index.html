@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1f2937">
+<title>Store Visit Report</title>
+<style>
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;--green:#16a34a;--red:#dc2626;--radius:14px;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.4;padding-bottom:40px;}
+  header.appbar{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.15);}
+  header.appbar h1{font-size:17px;margin:0;font-weight:600;flex:1}
+  header.appbar .sub{font-size:12px;opacity:.7;font-weight:400}
+  .iconbtn{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:13px;padding:8px 12px;border-radius:10px;cursor:pointer;}
+  .wrap{max-width:820px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+  label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:0 0 6px}
+  select,input[type=text],input[type=email],input[type=password],input[type=date],input[type=time],textarea{width:100%;padding:12px;font-size:16px;border:1px solid #cbd2dc;border-radius:10px;background:#fff;color:var(--ink);font-family:inherit;}
+  select:disabled,input:disabled{background:#f3f4f6;color:#6b7280}
+  textarea{min-height:90px;resize:vertical}
+  .row{margin-bottom:14px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;background:var(--accent);color:#fff;}
+  .btn:active{transform:translateY(1px)}
+  .btn.green{background:var(--green)}.btn.grey{background:#e5e7eb;color:var(--ink)}.btn.red{background:var(--red)}.btn.ghost{background:#fff;color:var(--accent);border:1.5px solid var(--accent)}
+  /* consistent action button system */
+  .btn.back{background:#727272;color:#fff;border:none}
+  .btn.proceed{background:#22aa96;color:#fff;border:none}
+  .btn.cancel{background:#9b0a0a;color:#fff;border:none}
+  .btn.add{background:#f26f21;color:#fff;border:none}
+  .btn.preview{background:#edae0f;color:#fff;border:none}
+  .btn.brown{background:#3b2314;color:#fff;border:none}
+  .btn.back:hover,.btn.proceed:hover,.btn.cancel:hover,.btn.add:hover,.btn.preview:hover{filter:brightness(1.06)}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .btn.small{width:auto;padding:9px 14px;font-size:14px}
+  .hide{display:none !important}
+  .dept-wrap{display:flex;flex-wrap:wrap;gap:8px}
+  .dept{border:1.5px solid #cbd2dc;background:#fff;color:var(--ink);border-radius:999px;padding:9px 16px;font-size:14px;font-weight:600;cursor:pointer;}
+  .dept.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .dept.catsel{background:#fff;border-color:var(--accent);color:var(--accent);border-width:2px;font-weight:700}
+  .finding{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;background:#fbfcfd;}
+  .finding .no{font-weight:700;color:var(--accent);min-width:24px}
+  .finding .body{flex:1;min-width:0}.finding .txt{white-space:pre-wrap;word-break:break-word}
+  .finding .draghandle{cursor:grab;color:#9aa2ad;font-size:22px;line-height:1;display:flex;align-items:center;padding:0 4px;touch-action:none;user-select:none;-webkit-user-select:none}
+  .finding .draghandle:active{cursor:grabbing}
+  .sortable-ghost{opacity:.35}.sortable-chosen{background:#eef2ff !important}
+  .factions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .fphoto{flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+  .fphoto img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+  .reorder-group{margin-bottom:16px}
+  .rg-h{font-weight:800;font-size:14px;background:#fde047;padding:6px 10px;border-radius:8px;margin-bottom:8px}
+  .rg-list{min-height:8px}
+  .finding.pinned .draghandle.pinnedlock{cursor:default;font-size:16px}
+  .sortable-ghost{opacity:.4}
+  .snote{margin-top:8px;width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+  .invite-results{border:1px solid var(--line);border-radius:8px;max-height:220px;overflow:auto;margin-top:4px}
+  .invite-results:empty{display:none}
+  .invite-row{padding:9px 11px;cursor:pointer;border-bottom:1px solid #f1f3f5;font-size:14px}
+  .invite-row:last-child{border-bottom:none}.invite-row:hover{background:#f8fafc}
+  .coinsp{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:14px}
+  .fbtn{border:1.5px solid #cbd2dc;background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink)}
+  .fbtn:active{transform:translateY(1px)}
+  .fbtn[disabled]{opacity:.35;cursor:not-allowed}
+  .finding img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+  .tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:11px;font-weight:700;background:#eef2ff;color:#3730a3;padding:2px 8px;border-radius:6px}
+  .del{background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;padding:4px}
+  .sesscard{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;background:#fff}
+  .sesscard:active{background:#f8fafc}
+  .sesscard .t{font-weight:700}.sesscard .m{font-size:13px;color:var(--muted);margin-top:2px}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
+  .pill.open{background:#fef3c7;color:#92400e}.pill.done{background:#dcfce7;color:#166534}
+  .pill.cloud{background:#e0f2fe;color:#075985}.pill.local{background:#f3f4f6;color:#6b7280}
+  .pill.owner{background:#fee2e2;color:#991b1b}.pill.admin{background:#ede9fe;color:#5b21b6}.pill.member{background:#f3f4f6;color:#374151}
+  .muted{color:var(--muted);font-size:13px}.spacer{height:8px}
+  .synced{font-size:12px;padding:6px 10px;border-radius:8px;text-align:center;margin-top:10px}
+  .synced.ok{background:#dcfce7;color:#166534}.synced.off{background:#f3f4f6;color:#6b7280}.synced.err{background:#fee2e2;color:#991b1b}
+  h2.section{font-size:15px;margin:0 0 12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .add-photo-lbl{display:flex;align-items:center;gap:8px;justify-content:center;padding:12px;border:1.5px dashed #cbd2dc;border-radius:10px;cursor:pointer;color:var(--accent);font-weight:600}
+  .thumbprev{margin-top:10px;position:relative;display:inline-block}
+  .thumbprev img{max-width:140px;border-radius:10px;border:1px solid var(--line)}
+  .thumbprev .x{position:absolute;top:-8px;right:-8px;background:var(--red);color:#fff;border:none;border-radius:999px;width:26px;height:26px;font-size:15px;cursor:pointer}
+  .sdept{font-weight:800;font-size:16px;background:#fde047;padding:8px 12px;border-radius:8px;margin:16px 0 8px}
+  .scat{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;background:#fff}
+  .scat-h{display:flex;align-items:center;gap:8px;padding:12px;cursor:pointer;background:#f8fafc}
+  .scat-h.static{cursor:default}
+  .scat-h .cn{flex:1;font-weight:700;font-size:14px}
+  .scat-h .cs{font-weight:800;font-size:15px}
+  .scat-body{padding:6px 12px 12px}
+  .sitem{padding:8px 0;border-bottom:1px solid #f1f3f5}
+  .sitem:last-child{border-bottom:none}
+  .sitem .q{font-size:13px;margin-bottom:6px}
+  .sbtns{display:flex;gap:6px;flex-wrap:wrap}
+  .sbtn{border:1.5px solid #cbd2dc;background:#fff;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
+  .sbtn.ya.on{background:var(--green);border-color:var(--green);color:#fff}
+  .sbtn.tidak.on{background:var(--red);border-color:var(--red);color:#fff}
+  .sbtn.na.on{background:#6b7280;border-color:#6b7280;color:#fff}
+  .sbtn.repeat.on{background:var(--amber);border-color:var(--amber);color:#fff}
+  .quickfill{display:flex;gap:6px;margin:4px 0 8px}
+  .quickfill button{font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+  #scoreList.locked .sbtn{opacity:.5;cursor:default}
+  #scoreList.locked .sbtn.on{opacity:1}
+  .lockbanner{background:#e0f2fe;border:1px solid #7dd3fc;color:#075985;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;margin:0 0 10px}
+  .btnrow3{display:flex;gap:8px;flex-wrap:wrap}
+  .btnrow3 .btn{flex:1 1 30%;min-width:120px}
+  .thumbrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+  .thumbrow .t{position:relative}
+  .thumbrow .t img{width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+  .thumbrow .t .x{position:absolute;top:-8px;right:-8px;background:var(--red);color:#fff;border:none;border-radius:999px;width:24px;height:24px;font-size:14px;cursor:pointer}
+  .mgmt-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}.mgmt-row .n{flex:1;font-size:14px}
+  small.hint{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+  .authbar{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;padding:10px 12px;border-radius:10px;background:#eef2ff;color:#3730a3}
+  .authbar .grow{flex:1}
+  .teamrow{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}
+  .teamrow .info{flex:1;min-width:0}
+  .teamrow select{width:auto;padding:8px}
+  .msg{font-size:13px;margin-top:8px}.msg.err{color:var(--red)}.msg.ok{color:var(--green)}
+  #reportView .report-paper{background:#fff;border:1px solid var(--line);border-radius:12px;padding:26px}
+  .report-page{margin-bottom:22px;padding-bottom:16px;border-bottom:2px dashed #cbd2dc}
+  .report-page:last-child{border-bottom:none;margin-bottom:0}
+  .rep-title{font-size:18px;font-weight:800;letter-spacing:.05em;border-bottom:3px solid var(--ink);padding-bottom:5px;margin-bottom:8px}
+  .rep-head{font-size:14px;line-height:1.5}.rep-head b{font-weight:700}
+  .sec-h{font-size:15px;margin:14px 0 4px;padding:3px 8px;background:#eef2f7;border-left:4px solid var(--ink)}
+  .mut-h{font-weight:700;color:#6b7280;font-size:12.5px;margin:8px 0 2px}
+  table.rep{width:100%;border-collapse:collapse;margin-top:6px}
+  table.rep th,table.rep td{border:1px solid #9aa2ad;padding:6px;vertical-align:top;font-size:13px;text-align:left;overflow-wrap:break-word;word-break:normal}
+  /* Questionnaire detail: identical fixed column widths on every department page */
+  table.rep.detail{table-layout:fixed}
+  table.rep.detail col.c-cat{width:15%}
+  table.rep.detail col.c-q{width:43%}
+  table.rep.detail col.c-a{width:15%}
+  table.rep.detail col.c-n{width:27%}
+  table.rep.detail tbody{page-break-inside:avoid}   /* keep a whole category together — move it to next page if it would spill */
+  table.rep th{background:#f1f5f9;font-weight:700;text-align:center}
+  table.rep thead{display:table-header-group}
+  table.rep tr{page-break-inside:avoid}
+  table.rep td.no{text-align:center;width:36px}table.rep td.ph{width:110px;text-align:center}
+  table.rep img{max-width:100px;max-height:90px;border-radius:6px}
+  /* --- Summary (page 1) --- */
+  table.sumtab{width:100%;border-collapse:collapse;margin:20px 0 14px}
+  table.sumtab td,table.sumtab th{padding:4px 10px;font-size:14px;text-align:left}
+  table.sumtab .sum-banner{background:#cfcfcf;font-weight:800;letter-spacing:.03em}
+  table.sumtab td.rl{font-weight:800}
+  table.sumtab td.dc,table.sumtab th.dc{text-align:center;font-weight:700}
+  table.sumtab td.sc{text-align:center}
+  .final-score{margin:6px 0 4px;padding-left:10px;display:flex;gap:38px;align-items:flex-end;flex-wrap:wrap}
+  .p1sum{padding-left:10px}   /* page-1 SUMMARY heading + body align with the table labels */
+  .final-score .fs-l{font-size:20px;font-weight:800;letter-spacing:.02em}
+  .final-score .fs-n,.final-score .fs-g{font-size:34px;font-weight:800;line-height:1;display:block}
+  .sum-body{font-size:14px;line-height:1.55;white-space:normal;margin-top:2px}
+  .rec-dept{margin:6px 0 4px}
+  .rec-dept .rec-d{font-weight:800;font-size:13.5px;margin:6px 0 1px}
+  .rec-list{margin:0 0 4px 0;padding-left:20px}
+  .rec-list li{font-size:13px;margin:1px 0}
+  .rec-n{color:#b45309;font-weight:700}
+  /* --- High-priority page 2 --- */
+  .hp-issue{margin:10px 0 16px}
+  .hp-issue-h{font-size:13.5px;margin:0 0 3px}
+  /* --- Detailed questionnaire pages --- */
+  table.dept-head-tab{border-collapse:collapse;margin:0 0 4px}
+  table.dept-head-tab td{padding:3px 4px;font-size:15px;font-weight:800}
+  table.dept-head-tab .dh-l{padding-right:26px}
+  table.dept-head-tab .dh-v{background:#fde047;min-width:180px}
+  table.dept-head-tab .dh-s{background:#d1d5db;min-width:180px}
+  table.rep.detail td.dcat{font-weight:700;background:#f8fafc;vertical-align:middle;width:150px}
+  table.rep.detail td.dans{text-align:center}
+  @page{size:A4;margin:1.27cm}
+  @media print{
+    body{background:#fff;padding:0}header.appbar,.noprint{display:none !important}.wrap{max-width:none;padding:0}
+    #reportView .report-paper{border:none;border-radius:0;padding:0}
+    table.rep th,table.rep td{border:1px solid #333;padding:3px 6px;font-size:11px}
+    table.rep img{max-height:70px;max-width:85px}
+    .rep-title{font-size:16px}.rep-head{font-size:11.5px;line-height:1.35}.sec-h{font-size:12.5px}.mut-h{font-size:11px}
+    .report-page{border-bottom:none;padding-bottom:0;margin-bottom:0}
+    .dept-sec{page-break-inside:auto}.sec-h,.mut-h{page-break-after:avoid}
+    table.sumtab td,table.sumtab th{font-size:12px;padding:3px 8px}
+    .final-score .fs-l{font-size:16px}.final-score .fs-n,.final-score .fs-g{font-size:26px}
+    .sum-body{font-size:12px}
+    table.dept-head-tab td{font-size:12.5px}
+    /* Questionnaire detail: compact; flows to a 2nd page if needed (rows never split, header repeats) */
+    table.rep.detail th,table.rep.detail td{font-size:9px;padding:1.5px 4px;line-height:1.2}
+    table.rep.detail td.dcat{font-size:9px}
+    table.rep.detail{page-break-inside:auto}
+    table.rep.detail thead{display:table-header-group}
+    table.rep.detail tr{page-break-inside:avoid}
+    table.sumtab .sum-banner,table.dept-head-tab .dh-v,table.dept-head-tab .dh-s,table.rep th,table.rep.detail td.dcat{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+</head>
+<body>
+<header class="appbar">
+  <h1>Store Visit Report <span class="sub" id="barSub"></span></h1>
+  <button class="iconbtn noprint" id="btnSettings">⚙ Setup</button>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ LOGIN ============ -->
+  <section id="loginView" class="hide">
+    <div class="card">
+      <h2 class="section" id="loginTitle">Sign in</h2>
+      <div id="nameRow">
+        <div class="row"><label>First name <span style="color:var(--red)">*</span></label><input type="text" id="authFirst" placeholder="e.g. Henny"></div>
+        <div class="row"><label>Middle name <span class="muted" style="font-weight:400">(optional)</span></label><input type="text" id="authMiddle"></div>
+        <div class="row"><label>Last name <span style="color:var(--red)">*</span></label><input type="text" id="authLast"></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:8px"><input type="checkbox" id="authNoLast" style="width:auto"> I don't have a last name</label>
+        <small class="hint">Only your <b>first name</b> is shown as the inspector on reports.</small>
+      </div>
+      <div class="row"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="username"></div>
+      <div class="row"><label>Password</label><input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn proceed" id="btnAuthGo">Sign in</button>
+      <div class="msg" id="authMsg"></div>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="btnAuthToggle">New here? Create an account</button>
+      <div class="spacer"></div>
+      <button class="btn grey small" id="btnAuthSettings">⚙ Cloud not set up yet? Open Setup</button>
+    </div>
+  </section>
+
+  <!-- ============ HOME ============ -->
+  <section id="homeView" class="hide">
+    <div class="authbar" id="authBar">
+      <span class="grow" id="authBarText">Working on this device only.</span>
+      <button class="btn small grey noprint" id="btnCloudSync" style="padding:6px 10px">☁ Sync</button>
+    </div>
+    <button class="btn hide" id="btnRequestsBanner" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;margin-bottom:16px">🔔 Delete requests pending: <span id="reqCount">0</span> — review</button>
+    <button class="btn hide" id="syncWarn" style="background:#9b0a0a;color:#fff;border:none;margin-bottom:16px;text-align:left;line-height:1.4;font-size:14px"></button>
+    <div class="muted" id="syncInfo" style="font-size:12px;margin:-6px 0 12px 2px"></div>
+    <div class="card">
+      <h2 class="section">Start / resume a visit</h2>
+      <div class="row" id="inspRow">
+        <label>Your name (inspector)</label>
+        <input type="text" id="inpInspector" placeholder="e.g. Henny">
+        <small class="hint">Saved on this device and stamped on every report.</small>
+      </div>
+      <div class="row"><label>Brand</label><select id="selBrand"></select></div>
+      <div class="row"><label>City</label><select id="selCity" disabled></select></div>
+      <div class="row"><label>Outlet</label><select id="selOutlet" disabled></select></div>
+      <div class="two">
+        <div class="row"><label>Date of visit</label><input type="date" id="inpDate"></div>
+        <div class="row"><label>Time of arrival</label><input type="time" id="inpArrival"></div>
+      </div>
+      <button class="btn proceed" id="btnStart">Start / Resume visit →</button>
+      <small class="hint" id="startHint"></small>
+    </div>
+    <div class="card"><h2 class="section">In-progress visits</h2><div id="openList"></div><p class="muted" id="openEmpty">No open visits. Start one above.</p></div>
+    <div class="card"><h2 class="section" id="doneTitle">My last visits</h2><div id="doneList"></div><p class="muted" id="doneEmpty">No finished visits yet.</p></div>
+    <div class="card hide" id="teamCard">
+      <h2 class="section">Team — everyone's last visits</h2>
+      <div id="teamDoneList"></div><p class="muted" id="teamDoneEmpty">No team visits yet.</p>
+      <div class="spacer"></div>
+      <button class="btn small proceed noprint" id="btnExcel">⬇ Export / choose reports to download</button>
+      <div class="spacer"></div>
+      <label class="btn small noprint" for="importXlsx" style="display:inline-flex;cursor:pointer;background:#0891b2;color:#fff">🧾 Compiled report from Excel</label>
+      <input type="file" id="importXlsx" accept=".xlsx,.csv" class="hide">
+      <small class="hint">Upload an exported (and optionally edited) Excel/CSV to generate a printable summary + details report.</small>
+    </div>
+  </section>
+
+  <!-- ============ VISIT ============ -->
+  <section id="visitView" class="hide">
+    <div class="card" style="position:relative">
+      <button class="btn small hide" id="btnInvite" style="position:absolute;top:10px;right:10px;width:auto;background:#edae0f;color:#3b2314;font-weight:700;padding:6px 12px">+ Add co-inspector</button>
+      <div class="rep-head" id="visitHeader" style="padding-right:132px"></div>
+      <button class="btn small hide" id="btnPullLatest" style="margin-top:10px;background:#0f766e;color:#fff;width:auto;padding:7px 12px">↻ Get teammates' latest entries</button>
+      <div class="two" style="margin-top:12px">
+        <div class="row"><label>Time of arrival</label><input type="time" id="editArrival"></div>
+        <div class="row"><label>Departments visited (auto)</label><input type="text" id="deptSummary" readonly></div>
+      </div>
+    </div>
+
+    <div class="card hide" id="outstandingCard" style="border-color:#fcd34d;background:#fffdf5">
+      <h2 class="section">⚠️ Open items to follow up at this store</h2>
+      <p class="muted" id="outstandingHint">Unresolved from previous visits — respond with the latest photo &amp; note, and tick Resolved when fixed.</p>
+      <div id="outstandingList"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section" id="findFormTitle">Add a finding</h2>
+      <div id="respondBanner" class="hide" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:10px;padding:10px;margin-bottom:12px;font-size:14px">🔁 Responding to tracked issue: <b><span id="respondTitle"></span></b> · first reported <span id="respondFirst"></span> &nbsp;<a href="#" id="respondCancel">cancel</a></div>
+      <div class="row">
+        <label>Photos (optional, up to 3)</label>
+        <label class="add-photo-lbl" for="findPhoto" id="findPhotoLbl">📷 Add photo (camera or gallery)</label>
+        <input type="file" id="findPhoto" accept="image/*" multiple class="hide">
+        <div class="thumbrow" id="photoPrev"></div>
+      </div>
+      <div class="row"><label>Finding / issue observed</label><textarea id="findText" placeholder="Describe what you found..."></textarea></div>
+      <div class="row"><label>Suggested solution / action <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="findSolution" placeholder="How to fix or address it — leave blank if not applicable"></textarea></div>
+      <div class="row"><label>Department where problem occurs (choose 1 or more)</label><div class="dept-wrap" id="deptWrap"></div></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);margin-bottom:8px"><input type="checkbox" id="findPriority" style="width:auto"> ⚠️ Mark as HIGH PRIORITY (auto-tracked &amp; followed up)</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);margin-bottom:8px"><input type="checkbox" id="findTrack" style="width:auto"> 🔁 Follow up next visit (track this issue)</label>
+      <label id="resolvedRow" class="hide" style="align-items:center;gap:8px;font-size:14px;color:var(--green);font-weight:600;margin-bottom:12px"><input type="checkbox" id="findResolved" style="width:auto"> ✅ This issue is now RESOLVED (stop tracking)</label>
+      <button class="btn add" id="btnAddFinding">+ Add finding to report</button>
+      <button class="btn grey small hide" id="btnCancelEdit" style="margin-top:8px">Cancel edit</button>
+    </div>
+
+    <div class="card">
+      <h2 class="section">Add food / beverage review</h2>
+      <div class="row"><label>Category <span style="color:var(--red)">*</span></label>
+        <div class="dept-wrap" id="fnbCatWrap"></div>
+      </div>
+      <div class="row"><label>Menu name <span style="color:var(--red)">*</span></label><input type="text" id="fnbMenu" placeholder="e.g. Iced Latte"></div>
+      <div class="row">
+        <label>Photo <span style="color:var(--red)">*</span> (required)</label>
+        <label class="add-photo-lbl" for="fnbPhoto">📷 Add photo (camera or gallery)</label>
+        <input type="file" id="fnbPhoto" accept="image/*" class="hide">
+        <div class="thumbprev hide" id="fnbPhotoPrev"><img id="fnbPhotoPrevImg"><button class="x" id="fnbPhotoClear">×</button></div>
+      </div>
+      <div class="row"><label>Finding <span style="color:var(--red)">*</span></label><textarea id="fnbText" placeholder="Taste, presentation, portion, temperature, etc."></textarea></div>
+      <div class="row"><label>Suggested solution / action <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="fnbSolution" placeholder="Optional"></textarea></div>
+      <button class="btn add" id="btnAddFnb">+ Add food/beverage to report</button>
+      <button class="btn grey small hide" id="btnCancelFnbEdit" style="margin-top:8px">Cancel edit</button>
+    </div>
+
+    <div class="card" id="scoringCard">
+      <h2 class="section">Questionnaire</h2>
+      <button class="btn proceed" id="btnScoring">Start questionnaire →</button>
+    </div>
+    <div class="card noprint">
+      <div class="btnrow3">
+        <button class="btn proceed" id="btnSave">Save</button>
+        <button class="btn preview" id="btnViewReport">Preview report</button>
+        <button class="btn back" id="btnBackHome">← Back to home</button>
+      </div>
+      <button class="btn cancel" id="btnCancel" style="width:100%;margin-top:10px">Cancel visit (discard &amp; remove)</button>
+      <div class="synced off" id="syncStatus" style="margin-top:8px">Not synced yet</div>
+    </div>
+  </section>
+
+  <!-- ============ REPORT ============ -->
+  <section id="reportView" class="hide">
+    <div class="report-paper" id="reportPaper"></div>
+    <div class="card noprint hide" id="findingsEditCard" style="margin-top:16px">
+      <h2 class="section">Entries (<span id="findCount">0</span>) — drag ☰ to reorder</h2>
+      <div id="findingList"></div><p class="muted" id="findEmpty">No entries added yet.</p>
+    </div>
+    <div class="card noprint" style="margin-top:16px">
+      <div class="row" style="margin-bottom:14px" id="summaryEditRow">
+        <label for="reportSummary"><b>Summary / foreword</b></label>
+        <textarea id="reportSummary" rows="4" placeholder="Write a short summary or foreword for this visit. Press Enter for new lines; * at the start of a line becomes a bullet."></textarea>
+        <small class="hint" id="summaryHint">Saved automatically when you click away.</small>
+      </div>
+      <div id="reportActionsDone">
+        <div class="btnrow3">
+          <button class="btn proceed" id="btnPrint">Save as PDF / Print</button>
+          <button class="btn brown hide" id="btnEditReport">Edit report (fix wording / remove entries)</button>
+          <button class="btn back" id="btnReportBack">← Back</button>
+        </div>
+        <button class="btn ghost hide" id="btnCopy">Copy report text</button>
+        <button class="btn cancel hide" id="btnDeleteReport" style="width:100%;margin-top:10px">Delete this report (admin — password required)</button>
+        <button class="btn cancel hide" id="btnRequestDelete" style="width:100%;margin-top:10px">Request deletion (needs admin approval)</button>
+        <div class="msg" id="reqMsg"></div>
+      </div>
+      <div id="reportActionsOpen" class="hide">
+        <div class="btnrow3">
+          <button class="btn back" id="btnPvBack">← Back to home</button>
+          <button class="btn add" id="btnPvAdd">+ Add more entries</button>
+          <button class="btn proceed" id="btnPvDone">Proceed to questionnaire →</button>
+        </div>
+        <button class="btn cancel" id="btnPvCancel" style="width:100%;margin-top:10px">Cancel visit (discard &amp; remove)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INVITE CO-INSPECTOR MODAL ============ -->
+  <div id="inviteModal" class="hide" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:36px 14px;overflow:auto">
+    <div class="card" style="max-width:460px;width:100%;margin:0">
+      <h2 class="section">Add co-inspector</h2>
+      <p class="muted" style="font-size:13px;margin-bottom:10px">Invite up to 2 teammates doing this store visit with you. They can add and edit entries; you (the initiator) fill the questionnaire &amp; summary. Inspectors are listed alphabetically on the report.</p>
+      <div id="coInspList"></div>
+      <div class="row"><label>Search team member (by name or email)</label><input type="text" id="inviteSearch" placeholder="Type a name..." autocomplete="off"></div>
+      <div id="inviteResults" class="invite-results"></div>
+      <div class="msg" id="inviteMsg"></div>
+      <div class="spacer"></div>
+      <button class="btn back" id="btnInviteClose">← Done</button>
+    </div>
+  </div>
+
+  <!-- ============ TEAM (owner) ============ -->
+  <section id="teamView" class="hide">
+    <div class="card">
+      <h2 class="section">Manage team &amp; roles</h2>
+      <p class="muted">Only you (Owner) can change roles. Members see only their own reports; Admins can see &amp; merge everyone's.</p>
+      <div id="teamList"></div>
+      <button class="btn small grey" id="btnTeamRefresh">↻ Refresh</button>
+      <div class="msg" id="teamMsg"></div>
+    </div>
+    <div class="card noprint"><button class="btn back" id="btnTeamBack">← Back to home</button></div>
+  </section>
+
+  <!-- ============ DELETE REQUESTS (staff) ============ -->
+  <section id="requestsView" class="hide">
+    <div class="card">
+      <h2 class="section">Deletion requests</h2>
+      <p class="muted">Members can't delete finished reports — they request here. Approving permanently deletes the report (your password required). Rejecting keeps it.</p>
+      <div id="reqList"></div>
+      <button class="btn small grey" id="btnReqRefresh">↻ Refresh</button>
+      <div class="msg" id="reqScreenMsg"></div>
+    </div>
+    <div class="card noprint"><button class="btn back" id="btnReqBack">← Back to home</button></div>
+  </section>
+
+  <!-- ============ SCORING ============ -->
+  <section id="scoringView" class="hide">
+    <div class="card" style="position:sticky;top:52px;z-index:6">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1"><b id="qTitle">Audit Questionnaire</b><div class="muted" id="scProg" style="font-size:13px">0 / 166 answered</div></div>
+        <button class="btn small" id="btnSkipQ" style="width:auto;background:#edae0f;color:#3b2314;font-weight:700">Skip questionnaire</button>
+        <button class="btn small back" id="qHeadBack">← Back</button>
+      </div>
+    </div>
+    <div id="scoreList"></div>
+    <div class="card noprint" style="display:flex;align-items:center;gap:10px">
+      <button class="btn back" id="qFootBack">← Back</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn" id="qFootNext">Continue →</button>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="settingsView" class="hide">
+    <div class="card">
+      <h2 class="section">Cloud connection (Supabase)</h2>
+      <label>Project URL</label>
+      <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co">
+      <div class="spacer"></div>
+      <label>API key (publishable or anon)</label>
+      <input type="text" id="sbKey" placeholder="sb_publishable_...  or  eyJhbGciOi...">
+      <small class="hint">In Supabase: click <b>Connect</b> (top) → App Frameworks, or Settings → API Keys (Publishable) / Legacy API Keys (anon). Do NOT use the secret/service_role key. Same two values for the whole team. Leave blank to work offline. See Setup Guide.</small>
+      <div class="spacer"></div>
+      <button class="btn small grey" id="btnTestSync">Test connection</button><span id="testResult" class="muted"></span>
+      <div class="spacer"></div>
+      <button class="btn proceed hide" id="btnGoLogin">Continue → Sign in / Create account</button>
+    </div>
+    <div class="card">
+      <h2 class="section">Manage brands, cities &amp; outlets</h2>
+      <div class="row"><label>Add a brand</label>
+        <div class="mgmt-row"><input type="text" id="newBrand" class="n" placeholder="e.g. Devon"><button class="btn small add" id="addBrand">Add</button></div>
+        <div id="brandTree"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 class="section">Data (offline backup)</h2>
+      <button class="btn small grey" id="btnExport">⬇ Export all data (backup)</button><div class="spacer"></div>
+      <label class="btn small grey" for="mergeFile" style="display:inline-flex;cursor:pointer">🔗 Merge teammate's visits (add)</label>
+      <input type="file" id="mergeFile" accept="application/json" class="hide"><div class="spacer"></div>
+      <label class="btn small grey" for="importFile" style="display:inline-flex;cursor:pointer;opacity:.85">⬆ Restore full backup (replaces)</label>
+      <input type="file" id="importFile" accept="application/json" class="hide">
+    </div>
+    <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
+  </section>
+
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31aa</div>
+</div>
+
+<script>
+"use strict";
+/* ===================================================================
+   TEAM CONFIG — fill these two lines ONCE, then host the file.
+   After this, teammates just open the link and log in — no Setup,
+   no key pasting. (The publishable/anon key is safe to put here.)
+   =================================================================== */
+var BUILTIN = {
+  url: "https://clprrwuizmlsddxmlvrh.supabase.co",
+  key: "sb_publishable_bY46Emu9VVzYZEhpjxnr2A_9_ranhHt"
+};
+
+var LS={cfg:"svr_config_v2",sessions:"svr_sessions_v1",insp:"svr_inspector_v1",sbUrl:"svr_sburl_v1",sbKey:"svr_sbkey_v1"};
+function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+var DEFAULT_CFG={brands:[
+  {name:"Devon",cities:[{name:"Surabaya",outlets:["Pakuwon Mall"]}]},
+  {name:"Hurricane's Grill",cities:[{name:"Jakarta",outlets:["Gunawarman"]},{name:"Surabaya",outlets:["Imam Bonjol"]}]},
+  {name:"Lo & Behold",cities:[{name:"Jakarta",outlets:["Lippo Mall Puri","The Breeze"]}]},
+  {name:"Toby's Estate",cities:[
+    {name:"Batam",outlets:["Grand Batam Mall","Hang Nadim Airport"]},
+    {name:"Jakarta",outlets:["Cilandak Town Square","Gandaria City","Gunawarman","Hublife","Kota Kasablanka","Lippo Mall Nusantara","Lippo Mall Puri","Mall Kelapa Gading 3","Mall of Indonesia","Pakuwon Mall Bekasi","PIK Avenue","Pondok Indah Mall 2","Senayan Park","The Breeze"]},
+    {name:"Lampung",outlets:["Lippo Mall Lampung"]},{name:"Makassar",outlets:["Trans Studio Makassar"]},
+    {name:"Medan",outlets:["Sun Plaza"]},{name:"Palembang",outlets:["Palembang Indah Mall"]},
+    {name:"Semarang",outlets:["DP Mall","Queen City Mall"]},
+    {name:"Surabaya",outlets:["Imam Bonjol","Pakuwon City Mall","Pakuwon Mall","Tunjungan Plaza 5"]},
+    {name:"Yogyakarta",outlets:["Pakuwon Mall Jogja"]}]}
+]};
+
+var cfg=load(LS.cfg,null); if(!cfg){cfg=JSON.parse(JSON.stringify(DEFAULT_CFG));save(LS.cfg,cfg);}
+var sessions=load(LS.sessions,[]);
+var inspector=load(LS.insp,"");
+var sbUrl=load(LS.sbUrl,"")||BUILTIN.url, sbKey=load(LS.sbKey,"")||BUILTIN.key;
+
+var SCORE_TEMPLATE=[["FOH","Grooming","Seluruh staff laki-laki sesuai standar",10],["FOH","Grooming","Seluruh staff perempuan sesuai standar",10],["FOH","Seragam","Memakai seragam lengkap, termasuk nametag",5],["FOH","Seragam","Seragam rapi dan putih bersih (tidak lusuh atau kuning)",5],["FOH","Seragam","Apron/vest bersih, tidak ada noda",5],["FOH","Seragam","Memakai sepatu sesuai standar, dan sepatu dalam keadaan bersih",10],["FOH","Seragam","Kaos kaki putih tanpa warna lain dan bersih",5],["FOH","Greetings","Semua Staff memberikan greetings dengan suara yang terdengar jelas",20],["FOH","Temperature","Suhu ruangan dalam keadaan normal, tidak panas",2],["FOH","Temperature","Seluruh AC berfungsi dengan baik, tidak ada yang rusak melebihi 3 hari dan belum dilaporkan",2],["FOH","Music","Sesuai playlist",5],["FOH","Music","Volume sesuai (tidak terlalu kencang, tidak terlalu kecil)",5],["FOH","Showcase Chiller (Cake Display)","Bagian atas chiller bersih, tidak lengket, dan tidak ada bekas air",5],["FOH","Showcase Chiller (Cake Display)","Bagian dalam chiller bersih",5],["FOH","Showcase Chiller (Cake Display)","Penyusunan cake rapi dan tidak ada wadah cake yang menumpuk satu sama lain",5],["FOH","Showcase Chiller (Cake Display)","Seluruh label sesuai dengan jenis cake yang didisplay",5],["FOH","Showcase Chiller (Cake Display)","Bagian samping chiller dan area prep bersih",5],["FOH","Showcase Chiller (Cake Display)","Suhu dalam keadaan normal (3-9 C)",5],["FOH","Showcase Chiller (Cake Display)","Semua cake yang tidak ter-display disimpan dalam keadaan tertutup",5],["FOH","Showcase Chiller (Cake Display)","Cake belum melewati batas expiry date",5],["FOH","Cashier Area","Permukaan atas rapi dan bersih, termasuk layar POS dan cash drawer",5],["FOH","Cashier Area","Storage kasir rapi",5],["FOH","Cashier Area","Storage kasir berbau netral (tidak ada bau tidak sedap)",5],["FOH","Cashier Area","Jumlah table aktif di POS & di outlet sama (tidak ada table gantung)",5],["FOH","Cashier Area","Kertas thermal, tinta, printer dan mesin EDC berfungsi dengan baik",5],["FOH","Retail Wall & Service Station","Seluruh barang tersusun rapi",3],["FOH","Retail Wall & Service Station","Bersih, tidak berdebu, tidak ada bekas lengket",3],["FOH","Retail Wall & Service Station","Laci service station normal dan dapat ditutup/dibuka dengan mudah",3],["FOH","Retail Wall & Service Station","Bagian dalam service station rapi",3],["FOH","Retail Wall & Service Station","Semua lampu & logo COFFEE menyala dan warnanya seragam",3],["FOH","Plants","Rapi (daun terpangkas rapi, tanaman tidak miring-miring)",2],["FOH","Plants","Bersih dari debu, terutama tanaman indoor",5],["FOH","Plants","Semua hidup (tidak ada yang kering dan botak)",5],["FOH","Plants","Pot bersih (tidak ada bercak tanah, puntung rokok maupun sampah)",2],["FOH","Plants","Tatakan pot kering (tidak ada air menggenang)",2],["FOH","Tables & Chairs","Rapi (semua meja lurus dan sejajar)",3],["FOH","Tables & Chairs","Bersih (tidak ada bekas remah/lengket di meja yang kosong)",3],["FOH","Tables & Chairs","Seluruh meja dan kursi berfungsi normal (tidak ada yang rusak, patah atau goyang-goyang)",3],["FOH","Floor","Rapi (tidak ada tiles/parquet yang lepas)",3],["FOH","Floor","Bersih (tidak ada bekas remah/lengket)",3],["FOH","Ambiance","Seluruh lampu menyala sesuai warna bohlam",5],["FOH","Ambiance","Seluruh buku menu dalam keadaan baik",5],["FOH","Ambiance","Tentcard dalam keadaan baik dan terpasang rapi",5],["FOH","Ambiance","Lilin dan bunga terpasang dengan benar",10],["FOH","Ambiance","Semua kaca, dinding dan ceiling dalam keadaan bersih (tidak ada bekas tangan maupun minyak)",10],["FOH","Product Knowledge and Service","Seluruh staff FOH bersikap ramah dan murah senyum terhadap tamu",5],["FOH","Product Knowledge and Service","Respons cepat ketika ada tamu yang memanggil (tidak lebih dari 10 detik saat tamu memanggil)",5],["FOH","Product Knowledge and Service","Paham dan dapat menjelaskan produk yang ditanyakan oleh tamu",5],["FOH","Product Knowledge and Service","Memahami menu makanan dan minuman, terutama pengertian single origins",5],["FOH","Product Knowledge and Service","Seluruh staff FOH berdiri tegak, berjalan dengan cepat dan tegap",5],["BAR","Grooming","Seluruh staff melakukan grooming sesuai dengan standar",10],["BAR","Seragam","Memakai seragam lengkap",5],["BAR","Seragam","Seragam rapi dan putih bersih (tidak lusuh atau kuning)",5],["BAR","Seragam","Apron/vest bersih, tidak ada noda",5],["BAR","Seragam","Memakai sepatu sesuai standar, dan sepatu dalam keadaan bersih",10],["BAR","Seragam","Kaos kaki putih tanpa warna lain dan bersih",5],["BAR","Coffee Equipments","Semua permukaan mesin bersih (tidak berdebu, tidak ada bercak air)",10],["BAR","Coffee Equipments","Penempatan lap ada pada tempatnya",10],["BAR","Coffee Equipments","Lap steamer bersih dan pemakaian tidak dicampur untuk keperluan lain",10],["BAR","Coffee Equipments","Area sekitarnya bersih dan rapi",10],["BAR","Chiller & Freezer","Bagian luar bersih (tidak ada bekas minyak, tidak lengket, tidak ada bekas tempelan)",10],["BAR","Chiller & Freezer","Bagian dalam bersih (tidak ada bekas cairan)",10],["BAR","Chiller & Freezer","Semua container benar labelnya (isi dan tanggal)",20],["BAR","Chiller & Freezer","Suhu benar (0-4 C untuk chiller dan -18 - -10 C untuk freezer)",10],["BAR","Chiller & Freezer","Bagian dalam berbau netral (tidak mengeluarkan bau tidak sedap/bau basi/bau menyengat karena produk yang rusak)",10],["BAR","Dry Storage","Bagian luar bersih (tidak berdebu, tidak ada bekas tangan, tidak lengket)",10],["BAR","Dry Storage","Bagian dalam bersih",10],["BAR","Dry Storage","Penempatan barang rapi",10],["BAR","Dry Storage","Semua container benar labelnya (isi dan tanggal)",20],["BAR","Dry Storage","Bagian dalam berbau netral (tidak mengeluarkan bau tidak sedap/bau basi/bau menyengat karena produk yang rusak)",10],["BAR","Bar Floor","Bersih",10],["BAR","Bar Floor","Kering, tidak lengket dan tidak licin",10],["BAR","Bar Floor","Semua barang tersimpan rapi pada tempatnya (tidak ada barang yang tidak seharusnya diletakkan di lantai)",15],["BAR","Bar Floor","Lantai rapi (tidak ada yang bolong)",10],["BAR","Bar Working Area","Permukaan meja bersih, tidak lengket dan tidak ada noda yang menempel",10],["BAR","Bar Working Area","Sink bersih dan tidak ada sampah",10],["BAR","Bar Working Area","Gelas kotor langsung dicuci (tidak ada tumpukkan gelas kotor lebih dari 15 menit)",10],["BAR","Bar Working Area","Tingkat keterisian tempat sampah di bawah 90% (tidak menggunung, tidak berserakkan)",10],["BAR","Bar Working Area","Area bar berbau netral (tidak ada bau tidak sedap/bau menyengat)",20],["BAR","Single Origins","Minimal ada 3 varian display single origins lengkap dengan info card",5],["BAR","Single Origins","Tray Single Origins bersih dan warnanya emas (tidak pudar, tidak hitam-hitam)",5],["BAR","Single Origins","Barista dapat menjelaskan profile taste Single Origin",5],["BAR","Safety & Maintenance Bar","Semua kerusakan sudah dilaporkan",20],["BAR","Safety & Maintenance Bar","Kerusakan equipment ter-follow up di bawah 1 minggu",0],["BAR","Safety & Maintenance Bar","Kerusakan sipil ter-follow up di bawah 2 minggu",0],["BAR","Pest Control Bar","Jebakan kecoa dan tikus dipasang di tempat yang benar",10],["BAR","Pest Control Bar","Semua area steril (tidak ada kotoran maupun jejak kaki binatang)",20],["BAR","Pest Control Bar","Semua area berbau netral (tidak ada bau kotoran binatang)",20],["BAR","Pest Control Bar","Semua area bersih dari bangkai",10],["BAR","Overall Bar Area","Cup, glass & saucer yang dipakai untuk service dalam keadaan baik (tidak gompal)",10],["BAR","Overall Bar Area","Semua lampu bar menyala",5],["BAR","Overall Bar Area","Peralatan kebersihan lengkap dan layak pakai",5],["BAR","Overall Bar Area","Semua chemical diletakkan di tempat yang benar (tidak bercampur dengan makanan)",5],["BAR","Overall Bar Area","Gutter kering dan tidak berbau",15],["BAR","Overall Bar Area","Printer docket berfungsi dengan baik",5],["BAR","Overall Bar Area","Tempat sabun terisi dan sabunnya tidak diencerkan",5],["BAR","Overall Bar Area","Semua area (termasuk kabinet, chiller dan freezer) bersih dari barang pribadi (termasuk botol minum, makanan, perlengkapan grooming pribadi)",10],["BOH","Grooming dan Seragam","Memakai seragam lengkap",10],["BOH","Grooming dan Seragam","Grooming (facial hair, rambut, kuku) sesuai standar",10],["BOH","Cooking Area","Permukaan bersih (tidak berdebu, tidak lengket)",10],["BOH","Cooking Area","Lantai cooking area bersih, kering dan tidak licin",20],["BOH","Cooking Area","Cooking equipment bersih (tidak ada sisa remah makanan di wok burner, stove, griller, flat top dll)",10],["BOH","Cooking Area","Exhaust hood bersih",10],["BOH","Cooking Area","Lampu exhaust hood menyala",10],["BOH","Chiller & Freezer","Bagian luar bersih (tidak ada bekas minyak, tidak lengket, tidak ada bekas tempelan)",10],["BOH","Chiller & Freezer","Bagian dalam bersih (tidak ada bekas cairan)",10],["BOH","Chiller & Freezer","Semua container benar labelnya (isi dan tanggal)",15],["BOH","Chiller & Freezer","Suhu benar (0-4 C untuk chiller dan -18 - -10 C untuk freezer)",10],["BOH","Chiller & Freezer","Bagian dalam berbau netral (tidak mengeluarkan bau tidak sedap/bau basi/bau menyengat karena produk yang rusak)",10],["BOH","Dry Storage","Bagian luar bersih (tidak berdebu, tidak ada bekas tangan, tidak lengket)",10],["BOH","Dry Storage","Bagian dalam bersih dan penempatan barang rapi",10],["BOH","Dry Storage","Semua container benar labelnya (isi dan tanggal)",15],["BOH","Dry Storage","Bagian dalam berbau netral (tidak mengeluarkan bau tidak sedap/bau basi/bau menyengat karena produk yang rusak)",10],["BOH","Dry Storage","Storage hanya terisi barang yang berkaitan dengan operasional (tidak ada barang pribadi maupun barang yang sudah tidak terpakai)",10],["BOH","Dishwash Area","Berbau netral (tidak ada bau tidak sedap/bau lembab/bau sampah/bau selokan)",5],["BOH","Dishwash Area","Cucian selalu dicuci secara berkala (tidak ada cucian menumpuk lebih dari 30 menit)",5],["BOH","Dishwash Area","Sabun dan sponge lengkap dan dalam keadaan baik dan layak dipakai",5],["BOH","Dishwash Area","Lantai area dishwash kering dan tidak licin",5],["BOH","Dishwash Area","Ada container untuk ramekin dan cutleries",5],["BOH","Pest Control Kitchen","Jebakan kecoa dan tikus dipasang di tempat yang benar",10],["BOH","Pest Control Kitchen","Semua dinding dan sudut-sudutnya dalam keadaan tertutup rapat (tidak ada lubang tikus)",20],["BOH","Pest Control Kitchen","Semua area steril (tidak ada kotoran maupun jejak kaki binatang)",20],["BOH","Pest Control Kitchen","Semua area berbau netral (tidak ada bau kotoran binatang)",20],["BOH","Pest Control Kitchen","Semua area bersih dari bangkai",10],["BOH","Safety & Maintenance Kitchen","Semua kerusakan sudah dilaporkan",20],["BOH","Safety & Maintenance Kitchen","Kerusakan equipment ter-follow up di bawah 1 minggu",0],["BOH","Safety & Maintenance Kitchen","Kerusakan sipil ter-follow up di bawah 2 minggu",0],["BOH","Overall Kitchen Area","Piring yang dipakai untuk service dalam keadaan baik (tidak gompal)",10],["BOH","Overall Kitchen Area","Semua lampu kitchen menyala",5],["BOH","Overall Kitchen Area","Janitor bersih dan tidak berbau",10],["BOH","Overall Kitchen Area","Permukaan dinding bersih, tidak berminyak dan tidak ada bekas tangan",10],["BOH","Overall Kitchen Area","Peralatan kebersihan lengkap dan layak pakai",10],["BOH","Overall Kitchen Area","Semua chemical diletakkan di tempat yang benar (tidak bercampur dengan makanan)",10],["BOH","Overall Kitchen Area","Gutter kering dan tidak berbau",20],["BOH","Overall Kitchen Area","Printer docket berfungsi dengan baik",5],["BOH","Overall Kitchen Area","Tempat sabun terisi dan sabunnya tidak diencerkan",5],["BOH","Overall Kitchen Area","Semua area (termasuk kabinet, chiller dan freezer) bersih dari barang pribadi (termasuk botol minum, makanan, perlengkapan grooming pribadi)",10],["FOH","Loker","Area loker bersih dan tidak berbau (termasuk dispenser)",10],["FOH","Loker","Cermin bersih, tidak gompal/pecah, tidak ada bercak noda",10],["FOH","Storage FOH","Storage rapi, bersih dan tidak berbau",5],["FOH","Storage FOH","Storage hanya terisi barang yang berkaitan dengan operasional (tidak ada barang pribadi maupun barang yang sudah tidak terpakai)",10],["FOH","Cleaning equipments","Semua cleaning equipments lengkap ada label FOH/BOH/BAR",5],["FOH","Cleaning equipments","Sapu dan pengki dalam keadaan layak",5],["FOH","Cleaning equipments","Pel dan embernya bersih dan dalam keadaan layak",5],["FOH","Cleaning equipments","Lap terbagi sesuai section (tidak tercampur antar department)",5],["FOH","Cleaning equipments","Lap dalam keadaan bersih dan layak",5],["FOH","Pest Control FOH","Jebakan kecoa dan tikus dipasang di tempat yang benar",10],["FOH","Pest Control FOH","Semua dinding dan sudut-sudutnya dalam keadaan tertutup rapat (tidak ada lubang tikus)",10],["FOH","Pest Control FOH","Semua area steril (tidak ada kotoran maupun jejak kaki binatang)",20],["FOH","Pest Control FOH","Semua area berbau netral (tidak ada bau kotoran binatang)",20],["FOH","Pest Control FOH","Ada jadwal pest control yang ditempel dan terlaksana dengan benar sesuai jadwal",0],["FOH","Safety & Maintenance FOH","Semua kerusakan sudah dilaporkan",20],["FOH","Safety & Maintenance FOH","Kerusakan equipment ter-follow up di bawah 1 minggu",0],["FOH","Safety & Maintenance FOH","Kerusakan sipil ter-follow up di bawah 2 minggu",0],["FOH","Safety & Maintenance FOH","APAR tergantung di tempat yang benar dan belum expired",5],["FOH","Safety & Maintenance FOH","Kotak P3K terisi dan tidak ada yang expired",5],["FOH","Toilet Area","Kondisi lantai bersih, tidak lengket, tidak berdebu dan tidak licin",0],["FOH","Toilet Area","Area wastafel, dinding, dan cermin bersih, kering dan tidak berbercak",0],["FOH","Toilet Area","Sabun cuci tangan dan tempat tissue terisi di atas 50%",0],["FOH","Toilet Area","Tingkat keterisian tempat sampah di bawah 50% (tidak menggunung, tidak berserakkan)",0],["FOH","Toilet Area","Lilin menyala dan reed diffuser tidak kosong",0],["FOH","Toilet Area","Area dalam toilet dan closet bersih, kering, dan tidak ada bau tak sedap.",0],["FOH","Toilet Area","Closet dan alat flush berfungsi normal",0],["FOH","Toilet Area","Tissue roll selalu terisi dan ada spare jika sudah tersisa 25%",0],["FOH","Toilet Area","Exhaust bersih (tidak berdebu)",0],["FOH","Toilet Area","Semua lampu dalam keadaan menyala",0]];
+var REAL_DEPTS=["FOH","BAR","BOH","PASTRY"], ALL_EXPANDS=["FOH","BAR","BOH"], BUCKET="visit-photos", TABLE="visits", REQTABLE="delete_requests";
+var pendingReqs=[];
+function expandDepts(depts){ var out=[]; (depts||[]).forEach(function(d){ if(d==="ALL"){ ALL_EXPANDS.forEach(function(x){ if(out.indexOf(x)<0) out.push(x); }); } else if(out.indexOf(d)<0) out.push(d); }); return out; }
+var current=null, draftDepts=[], draftPhotos=[], editingIndex=null, editingDone=false;
+var MAX_PHOTOS=3;
+var draftFnbPhoto=null, editingFnbIndex=null;
+var FNB_CATS=["Beverage","Food","Pastry"], fnbCat="Beverage";
+function renderFnbCat(){var w=$("fnbCatWrap");if(!w)return;w.innerHTML="";FNB_CATS.forEach(function(c){var b=document.createElement("button");b.type="button";b.className="dept"+(fnbCat===c?" catsel":"");b.textContent=c;b.addEventListener("click",function(){fnbCat=c;renderFnbCat();});w.appendChild(b);});}
+var respondingIssue=null, outstandingIssues=[];
+var sb=null;
+var me=null;           // {id, email, name, role}
+var authMode="signin"; // or "signup"
+
+var $=function(id){return document.getElementById(id);};
+function show(v){["loginView","homeView","visitView","reportView","teamView","requestsView","scoringView","settingsView"].forEach(function(x){$(x).classList.add("hide");});$(v).classList.remove("hide");window.scrollTo(0,0);}
+/* ---- Auth-session hardening: stops silent cloud-sync failures (expired login) ---- */
+var authWarn=false;   // true = last sync couldn't confirm the sign-in (prompt re-login) — but we NEVER auto-clear `me`
+function isAuthError(m){ m=(""+m).toLowerCase(); return /row-level security|jwt|not authenticated|unauthorized|invalid token|refresh token|no api key|401|403/.test(m); }
+function countUnsynced(){ return (sessions||[]).filter(function(s){ return s && s.synced===false; }).length; }
+function updateSyncWarning(){
+  var b=$("syncWarn"); if(!b) return;
+  renderSyncInfo();
+  if(!cloudConfigured()){ b.classList.add("hide"); return; }
+  var n=countUnsynced();
+  if(authWarn){
+    b.classList.remove("hide");
+    b.innerHTML=(lastAuthDiag?esc(lastAuthDiag):"⚠ Sync couldn't confirm your sign-in — your work is safe on this device.")+"<br><u>Tap here to sign in again.</u>"+(n>0?" ("+n+" waiting)":"");
+    return;
+  }
+  if(n===0){ b.classList.add("hide"); return; }
+  b.classList.remove("hide");
+  b.innerHTML = loggedIn()
+    ? "⚠ "+n+" visit(s) not yet saved to the cloud. Tap to sync now."
+    : "⚠ "+n+" visit(s) saved on this device only — sign in and sync before you risk losing them. Tap to sign in.";
+}
+async function syncAllUnsynced(){
+  var list=(sessions||[]).filter(function(s){return s && s.synced===false;});
+  for(var i=0;i<list.length;i++){ await pushSession(list[i],"Synced"); }
+  updateSyncWarning();
+}
+/* ---- Auto-sync + keep-alive: every 90s (and on refocus / back-online) refresh the
+   login so it never expires mid-visit, and push anything still on the device. ---- */
+var lastSyncOk=0, autoSyncBusy=false;
+function fmtHM(ts){ if(!ts) return "—"; var d=new Date(ts); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function renderSyncInfo(){
+  var e=$("syncInfo"); if(!e) return;
+  if(!cloudConfigured()){ e.textContent=""; return; }
+  var n=countUnsynced();
+  e.innerHTML="Auto-sync on · last synced "+fmtHM(lastSyncOk)+" · "+(n>0?"<b style='color:#9b0a0a'>"+n+" waiting</b>":"all synced ✓");
+}
+async function autoSyncTick(){
+  if(autoSyncBusy || !cloudConfigured() || !loggedIn()) { renderSyncInfo(); return; }
+  autoSyncBusy=true;
+  try{
+    try{ await sb.auth.refreshSession(); }catch(e){}   // opportunistic keep-alive — best effort, never logs you out
+    if(countUnsynced()>0){ await syncAllUnsynced(); }
+    // keep an open shared visit fresh with teammates' entries
+    if(current && current.status!=="done" && ((current.shared_with&&current.shared_with.length)||(current.coInspectors&&current.coInspectors.length))){
+      var ch=await pullMerge(current);
+      if(ch && !$("visitView").classList.contains("hide")){ renderFindings(); updateDeptSummary(); }
+      if(ch && !$("reportView").classList.contains("hide")){ renderFindings(); refreshPreviewPaper(); }
+    }
+  }catch(e){}
+  finally{ autoSyncBusy=false; renderSyncInfo(); }
+}
+setInterval(autoSyncTick, 90000);
+document.addEventListener("visibilitychange",function(){ if(!document.hidden) autoSyncTick(); });
+window.addEventListener("online", autoSyncTick);
+window.addEventListener("focus", autoSyncTick);
+document.addEventListener("DOMContentLoaded",function(){ var w=$("syncWarn"); if(w) w.addEventListener("click",async function(){ if(authWarn || !loggedIn()){ show("loginView"); renderAuthMode(); return; } await syncAllUnsynced(); }); });
+function uid(){return "s_"+Date.now()+"_"+Math.random().toString(36).slice(2,7);}
+function todayISO(){return new Date().toISOString().slice(0,10);}
+function nowHM(){var d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
+function fmtDateLong(iso){if(!iso)return "";var d=new Date(iso+"T00:00:00");var D=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],M=["January","February","March","April","May","June","July","August","September","October","November","December"];return D[d.getDay()]+", "+String(d.getDate()).padStart(2,"0")+" "+M[d.getMonth()]+" "+d.getFullYear();}
+function unionDepts(s){var set={};(s.findings||[]).forEach(function(f){expandDepts(f.depts).forEach(function(d){set[d]=1;});});return REAL_DEPTS.filter(function(d){return set[d];});}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function escNL(s){ return esc(s).replace(/\r?\n/g,"<br>"); }
+function prioFirst(arr){ var p=[],n=[]; arr.forEach(function(x){ (x.priority?p:n).push(x); }); return p.concat(n); }
+/* Stable per-entry id + per-group ordering (so lines can be arranged within each
+   department / F&B sub-group independently; high-priority stays pinned on top). */
+var _uidc=0;
+function uid(){ return "e"+Date.now().toString(36)+(_uidc++).toString(36)+Math.random().toString(36).slice(2,5); }
+function ensureUids(s){ if(!s||!s.findings)return; s.findings.forEach(function(f){ if(!f.uid) f.uid=uid(); }); }
+function orderByGroup(items, gkey, s){
+  var pr=[], rest=[]; items.forEach(function(f){ (f.priority?pr:rest).push(f); });
+  var ord=(s&&s.deptOrder&&s.deptOrder[gkey])||[];
+  rest=rest.map(function(f,i){return {f:f,i:i};}).sort(function(a,b){
+    var ia=ord.indexOf(a.f.uid); if(ia<0)ia=1e9+a.i;
+    var ib=ord.indexOf(b.f.uid); if(ib<0)ib=1e9+b.i;
+    return ia-ib;
+  }).map(function(o){return o.f;});
+  return pr.concat(rest);
+}
+function photosOf(f){ return (f&&f.photos&&f.photos.length)?f.photos:((f&&f.photo)?[f.photo]:[]); }
+function photoImgs(f){ var a=photosOf(f); return a.length? a.map(function(p){return "<img src='"+p+"'>";}).join("") : "—"; }
+function persist(){save(LS.sessions,sessions);}
+function cloudConfigured(){return !!(sbUrl&&sbKey);}
+function loggedIn(){return !!(sb&&me);}
+function isStaff(){return !!(me&&(me.role==="owner"||me.role==="admin"));}
+function isOwner(){return !!(me&&me.role==="owner");}
+function updateSetupBtn(){ $("btnSettings").classList.toggle("hide", !(isOwner() || !cloudConfigured())); }
+
+/* ============ Supabase ============ */
+function initSupabase(){
+  sb=null;
+  if(cloudConfigured()&&window.supabase&&window.supabase.createClient){
+    try{sb=window.supabase.createClient(sbUrl,sbKey);}catch(e){sb=null;}
+  }
+  return sb;
+}
+function dataURLtoBlob(d){var a=d.split(","),mime=(a[0].match(/data:(.*?);/)||[,"image/jpeg"])[1];var bin=atob(a[1]),n=bin.length,u=new Uint8Array(n);while(n--)u[n]=bin.charCodeAt(n);return new Blob([u],{type:mime});}
+
+async function loadProfile(){
+  if(!sb) return null;
+  var s=await sb.auth.getSession();
+  var sess=s.data?s.data.session:null;
+  if(!sess){ me=null; return null; }
+  var uidv=sess.user.id;
+  var r=await sb.from("profiles").select("id,email,name,role").eq("id",uidv).limit(1);
+  if(r.error||!r.data||!r.data.length){
+    me={id:uidv,email:sess.user.email,name:(sess.user.user_metadata&&sess.user.user_metadata.name)||sess.user.email,role:"member"};
+  } else { me=r.data[0]; }
+  inspector=firstNameOf(me.name)||me.email; save(LS.insp,inspector);
+  return me;
+}
+
+var qexempt=[];   // user ids allowed to skip the questionnaire without a password (owner-managed)
+function isQExempt(id){ return !!(id && qexempt.indexOf(id)>=0); }
+async function loadConfigFromCloud(){
+  if(!loggedIn()) return;
+  try{
+    var r=await sb.from("app_config").select("data").eq("key","outlets").limit(1);
+    if(!r.error){
+      if(r.data && r.data.length && r.data[0].data){
+        cfg=r.data[0].data; save(LS.cfg,cfg); fillBrands(); fillCities(); fillOutlets();
+      } else if(isOwner()){ pushConfig(); } // seed cloud from this owner's list the first time
+    }
+  }catch(e){}
+  try{
+    var rq=await sb.from("app_config").select("data").eq("key","qexempt").limit(1);
+    if(!rq.error && rq.data && rq.data.length && rq.data[0].data && Array.isArray(rq.data[0].data.ids)) qexempt=rq.data[0].data.ids;
+  }catch(e){}
+}
+async function pushConfig(){
+  if(!(isOwner()&&loggedIn())) return;
+  try{ await sb.from("app_config").upsert({key:"outlets", data:cfg, updated:Date.now(), updated_by:(me?me.id:null)}); }catch(e){}
+}
+async function pushQExempt(){
+  if(!(isOwner()&&loggedIn())) return;
+  try{ await sb.from("app_config").upsert({key:"qexempt", data:{ids:qexempt}, updated:Date.now(), updated_by:(me?me.id:null)}); }catch(e){}
+}
+async function pushSession(sess,label){
+  persist();
+  if(!loggedIn()){ setSyncBadge(sess); updateSyncWarning(); return; }
+  var el=$("syncStatus"); if(el){el.className="synced off"; el.textContent="⏳ Syncing to cloud...";}
+  var r=await pushOnce(sess);
+  if(!r.ok && r.authErr){ try{ await sb.auth.refreshSession(); }catch(e){} r=await pushOnce(sess); }  // refresh token & retry ONCE — never force logout
+  if(r.ok){
+    sess.synced=true; persist(); lastSyncOk=Date.now(); authWarn=false;
+    if(el){el.className="synced ok"; el.textContent="✓ "+label+" & synced to cloud";}
+    if(current && current.id===sess.id){ if(!$("findingsEditCard").classList.contains("hide")){ renderFindings(); refreshPreviewPaper(); } updateDeptSummary(); }
+  } else {
+    sess.synced=false; persist();
+    if(r.needOwner){ if(el){el.className="synced err"; el.textContent="⚠ Saved on device. The visit owner needs to sync this visit once first, then your entries merge in automatically.";} }
+    else if(r.authErr){ authWarn=true; lastAuthDiag=await authDiagnose(sess,r.msg); if(el){el.className="synced err"; el.textContent=lastAuthDiag;} }
+    else { if(el){el.className="synced err"; el.textContent="⚠ Cloud sync failed (data safe on device): "+r.msg;} }
+  }
+  updateSyncWarning();
+}
+var lastAuthDiag="";
+// Work out WHY a save was rejected so we show the right fix (and can tell what's wrong).
+async function authDiagnose(sess,rawMsg){
+  var uid=null;
+  try{ var g=await sb.auth.getSession(); uid=g&&g.data&&g.data.session&&g.data.session.user&&g.data.session.user.id||null; }catch(e){}
+  var mine=sess.user_id, shared=(sess.shared_with||[]);
+  if(!uid) return "⚠ [A] Not signed in to the cloud (no active session). Tap the red banner to sign in. Saved on device.";
+  if(mine && mine!==uid && shared.indexOf(uid)<0) return "⚠ [B] This visit is owned by another account and isn't shared with you (you: "+String(uid).slice(0,6)+"…, owner: "+String(mine).slice(0,6)+"…). Saved on device.";
+  if(mine && mine!==uid) return "⚠ [C] You're a co-inspector — the app couldn't update the shared visit (owner: "+String(mine).slice(0,6)+"…). Saved on device.";
+  return "⚠ [D] Cloud rejected the save by database rule though your sign-in is valid (uid "+String(uid).slice(0,6)+"…). Likely a Supabase policy issue. Saved on device. ["+String(rawMsg).slice(0,60)+"]";
+}
+async function uploadPhotos(sess){
+  for(var i=0;i<(sess.findings||[]).length;i++){
+    var f=sess.findings[i];
+    if(!f.photos || !f.photos.length){ f.photos = f.photo? [f.photo] : []; }   // back-compat single->array
+    for(var p=0;p<f.photos.length;p++){
+      if(f.photos[p] && f.photos[p].indexOf("data:")===0){
+        var path=(me?me.id+"/":"")+sess.id+"/"+i+"_"+p+"_"+Date.now()+".jpg";
+        var up=await sb.storage.from(BUCKET).upload(path,dataURLtoBlob(f.photos[p]),{contentType:"image/jpeg",upsert:true});
+        if(up.error) throw up.error;
+        f.photos[p]=sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      }
+    }
+    f.photo=f.photos[0]||"";
+  }
+}
+async function fetchServerVisit(id){ try{ var r=await sb.from(TABLE).select("data").eq("id",id).limit(1); if(r.error||!r.data||!r.data.length) return null; return r.data[0].data||null; }catch(e){ return null; } }
+// Union two findings lists by uid; on same uid, the newer edit (_m) wins. Never drops entries.
+function unionFindings(a,b){ a=a||[]; b=b||[]; var map={},order=[];
+  a.forEach(function(f,i){ var k=f.uid||("a"+i); if(!(k in map))order.push(k); map[k]=f; });
+  b.forEach(function(f,i){ var k=f.uid||("b"+i); if(!(k in map)){ order.push(k); map[k]=f; } else if((f._m||0)>=(map[k]._m||0)){ map[k]=f; } });
+  return order.map(function(k){ return map[k]; });
+}
+function unionIds(a,b){ var s={}; (a||[]).concat(b||[]).forEach(function(x){ if(x) s[x]=1; }); return Object.keys(s); }
+function unionCo(a,b){ var m={}; (a||[]).concat(b||[]).forEach(function(c){ if(c&&c.id) m[c.id]=c; }); return Object.keys(m).map(function(k){ return m[k]; }); }
+// Tombstones: {uid: deletedAt}. Merge keeps the newest deletion time.
+function mergeTomb(a,b){ var t=Object.assign({},a||{}); var o=b||{}; Object.keys(o).forEach(function(k){ t[k]=Math.max(t[k]||0,o[k]||0); }); return t; }
+// A finding stays only if it isn't tombstoned by a deletion at-or-after its last edit.
+function applyTomb(findings,tomb){ tomb=tomb||{}; return (findings||[]).filter(function(f){ var td=tomb[f.uid]; return !(td && td>=(f._m||0)); }); }
+// Full conflict-free merge of a shared visit's entries + deletions from two copies.
+function mergeVisit(srv,sess){
+  var live=unionFindings(srv.findings, sess.findings);
+  var tomb=mergeTomb(srv.deleted, sess.deleted);
+  return { findings:applyTomb(live,tomb), deleted:tomb, shared_with:unionIds(srv.shared_with,sess.shared_with), coInspectors:unionCo(srv.coInspectors,sess.coInspectors) };
+}
+// Read-only pull: fetch the server copy of a SHARED visit and merge it into the local one
+// (so teammates' new/edited/deleted entries appear without having to Save first).
+async function pullMerge(sess){
+  if(!sess || !loggedIn() || !sb) return false;
+  if(!((sess.shared_with&&sess.shared_with.length)||(sess.coInspectors&&sess.coInspectors.length))) return false;
+  var srv=await fetchServerVisit(sess.id); if(!srv) return false;
+  var iAmOwner=(sess.user_id===me.id)||!sess.user_id;
+  var mg=mergeVisit(srv,sess);
+  sess.findings=mg.findings; sess.deleted=mg.deleted; sess.shared_with=mg.shared_with; sess.coInspectors=mg.coInspectors;
+  if(!iAmOwner){ sess.scores=srv.scores||sess.scores; sess.scoreNotes=srv.scoreNotes||sess.scoreNotes; sess.summary=srv.summary; sess.scoreSubmitted=srv.scoreSubmitted; sess.scoreSkipped=srv.scoreSkipped; sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
+  persist(); return true;
+}
+async function pushOnce(sess){
+  try{
+    ensureUids(sess);
+    await uploadPhotos(sess);
+    if(!sess.user_id&&me) sess.user_id=me.id;
+    var isShared=((sess.shared_with&&sess.shared_with.length)||(sess.coInspectors&&sess.coInspectors.length));
+    var iAmOwner=(sess.user_id===me.id)||!sess.user_id;
+    var dataToStore=sess, ownerId=(iAmOwner?(me?me.id:sess.user_id):sess.user_id);
+    if(isShared){
+      var srv=await fetchServerVisit(sess.id);
+      if(srv){
+        var mg=mergeVisit(srv,sess);
+        if(iAmOwner){
+          dataToStore=Object.assign({},sess,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,updated:Date.now()});
+        } else {
+          // co-inspector: keep the owner's scores/summary/status; only contribute merged findings + deletions
+          dataToStore=Object.assign({},srv,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,updated:Date.now()});
+          ownerId=srv.user_id||ownerId;
+        }
+        // reflect the merged result back onto the local copy so everyone's entries show
+        sess.findings=mg.findings; sess.deleted=mg.deleted; sess.shared_with=mg.shared_with; sess.coInspectors=mg.coInspectors;
+        if(!iAmOwner){ sess.scores=srv.scores||sess.scores; sess.scoreNotes=srv.scoreNotes||sess.scoreNotes; sess.summary=srv.summary; sess.scoreSubmitted=srv.scoreSubmitted; sess.scoreSkipped=srv.scoreSkipped; sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
+      } else if(!iAmOwner){
+        return {ok:false, needOwner:true};   // owner hasn't created the row yet; co-inspector can't insert
+      }
+    }
+    var row={id:sess.id,user_id:ownerId||(me?me.id:null),inspector:(dataToStore.inspector||sess.inspector||""),brand:sess.brand,city:sess.city,outlet:sess.outlet,visit_date:sess.date,status:(dataToStore.status||sess.status),updated:Date.now(),shared_with:(dataToStore.shared_with||sess.shared_with||[]),data:dataToStore};
+    var res = iAmOwner ? await sb.from(TABLE).upsert(row) : await sb.from(TABLE).update(row).eq("id",sess.id);
+    if(res.error) throw res.error;
+    await syncIssues(sess);
+    return {ok:true};
+  }catch(err){ var m=(err&&(err.message||err.error_description))||String(err); return {ok:false, authErr:isAuthError(m), msg:m}; }
+}
+async function syncIssues(sess){
+  if(!loggedIn()) return;
+  var tracked=(sess.findings||[]).filter(function(f){return f.kind!=="fnb" && (f.track||f.issueId);});
+  for(var i=0;i<tracked.length;i++){
+    var f=tracked[i];
+    var entry={visit_id:sess.id,date:sess.date,by:sess.user_id||me.id,name:sess.inspector||"",photo:f.photo||"",note:f.text||"",solution:f.solution||"",resolved:!!f.resolved};
+    try{
+      var iss=null;
+      if(f.issueId){ var r=await sb.from("issues").select("*").eq("id",f.issueId).limit(1); if(!r.error&&r.data&&r.data.length) iss=r.data[0]; }
+      if(iss){
+        var hist=(iss.history||[]).filter(function(h){return h.visit_id!==sess.id;}); hist.push(entry); hist.sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+        var patch={history:hist,priority:!!f.priority,depts:f.depts||iss.depts,status:f.resolved?"resolved":"open",updated:Date.now(),title:iss.title||f.text};
+        if(f.resolved){patch.resolved_at=new Date().toISOString();patch.resolved_by=me.id;patch.resolved_name=me.name;}
+        var u=await sb.from("issues").update(patch).eq("id",f.issueId); if(u.error) throw u.error;
+      } else {
+        var newIss={store_key:storeKeyOf(sess),brand:sess.brand,city:sess.city,outlet:sess.outlet,depts:f.depts||[],priority:!!f.priority,title:f.text||"",status:f.resolved?"resolved":"open",created_by:me.id,created_name:sess.inspector||me.name,created_date:sess.date,created_visit_id:sess.id,history:[entry],updated:Date.now()};
+        if(f.resolved){newIss.resolved_at=new Date().toISOString();newIss.resolved_by=me.id;newIss.resolved_name=me.name;}
+        var ins=await sb.from("issues").insert(newIss).select("id").limit(1);
+        if(ins.error) throw ins.error;
+        if(ins.data&&ins.data[0]){ f.issueId=ins.data[0].id; f.firstDate=sess.date; f.firstName=sess.inspector; persist(); }
+      }
+    }catch(e){ /* issue sync best-effort; visit already saved */ }
+  }
+}
+async function pullVisits(){
+  if(!loggedIn()) return {changed:0,error:"not signed in"};
+  try{
+    var res=await sb.from(TABLE).select("data,updated").order("updated",{ascending:false}).limit(2000);
+    if(res.error) throw res.error;
+    var idx={}; sessions.forEach(function(s,i){idx[s.id]=i;});
+    var changed=0;
+    (res.data||[]).forEach(function(r){var s=r.data;if(!s||!s.id)return;
+      if(idx[s.id]!==undefined){var i=idx[s.id];if((s.updated||0)>(sessions[i].updated||0)){sessions[i]=s;changed++;}}
+      else{sessions.push(s);idx[s.id]=sessions.length-1;changed++;}
+    });
+    if(changed) persist();
+    return {changed:changed,error:null};
+  }catch(err){ return {changed:0,error:(err.message||String(err))}; }
+}
+
+/* ============ Auth UI ============ */
+function renderAuthMode(){
+  $("loginTitle").textContent = authMode==="signup"?"Create an account":"Sign in";
+  $("nameRow").style.display = authMode==="signup"?"block":"none";
+  var nl=$("authNoLast"); if(nl){ $("authLast").disabled=nl.checked; if(nl.checked)$("authLast").value=""; }
+  $("btnAuthGo").textContent = authMode==="signup"?"Create account":"Sign in";
+  $("btnAuthToggle").textContent = authMode==="signup"?"Already have an account? Sign in":"New here? Create an account";
+  $("btnAuthSettings").classList.toggle("hide", cloudConfigured());
+  updateSetupBtn();
+  $("authMsg").textContent="";
+}
+$("btnAuthToggle").addEventListener("click",function(){authMode=authMode==="signup"?"signin":"signup";renderAuthMode();});
+$("authNoLast").addEventListener("change",function(){ $("authLast").disabled=this.checked; if(this.checked)$("authLast").value=""; });
+function firstNameOf(name){ return ((name||"").trim().split(/\s+/)[0])||(name||""); }
+$("btnAuthSettings").addEventListener("click",function(){openSettings();});
+$("btnAuthGo").addEventListener("click",async function(){
+  var email=$("authEmail").value.trim(), pass=$("authPass").value;
+  var msg=$("authMsg"); msg.className="msg";
+  if(!sb){ msg.className="msg err"; msg.textContent="Cloud not set up. Open ⚙ Setup and paste your Supabase URL + key first."; return; }
+  if(!email||!pass){ msg.className="msg err"; msg.textContent="Enter email and password."; return; }
+  msg.textContent="Please wait...";
+  try{
+    if(authMode==="signup"){
+      var first=$("authFirst").value.trim(), middle=$("authMiddle").value.trim(), noLast=$("authNoLast").checked, last=noLast?"":$("authLast").value.trim();
+      if(!first){ msg.className="msg err"; msg.textContent="Enter your first name."; return; }
+      if(!last && !noLast){ msg.className="msg err"; msg.textContent="Enter your last name (or tick “I don't have a last name”)."; return; }
+      var name=[first,middle,last].filter(Boolean).join(" ");
+      var su=await sb.auth.signUp({email:email,password:pass,options:{data:{name:name,first_name:first}}});
+      if(su.error) throw su.error;
+      if(!su.data.session){ // email confirmation on
+        var si=await sb.auth.signInWithPassword({email:email,password:pass});
+        if(si.error){ msg.className="msg ok"; msg.textContent="Account created. Check your email to confirm, then sign in."; authMode="signin"; renderAuthMode(); return; }
+      }
+    } else {
+      var r=await sb.auth.signInWithPassword({email:email,password:pass});
+      if(r.error) throw r.error;
+    }
+    await afterLogin();
+  }catch(err){ msg.className="msg err"; msg.textContent=(err.message||String(err)); }
+});
+async function afterLogin(){
+  await loadProfile();
+  $("authPass").value="";
+  authWarn=false;
+  await initHome();
+  await syncAllUnsynced();   // push any device-only visits made while signed out / expired
+}
+async function doSignOut(){
+  if(sb){ try{ await sb.auth.signOut(); }catch(e){} }
+  me=null;
+  show("loginView"); renderAuthMode();
+}
+
+/* ============ Home ============ */
+function fillBrands(){var s=$("selBrand");s.innerHTML="<option value=''>-- choose brand --</option>";cfg.brands.forEach(function(b){var o=document.createElement("option");o.value=b.name;o.textContent=b.name;s.appendChild(o);});}
+function fillCities(){var bn=$("selBrand").value,s=$("selCity");s.innerHTML="<option value=''>-- choose city --</option>";s.disabled=!bn;$("selOutlet").innerHTML="<option value=''>-- choose outlet --</option>";$("selOutlet").disabled=true;if(!bn)return;var b=cfg.brands.find(function(x){return x.name===bn;});(b?b.cities:[]).forEach(function(c){var o=document.createElement("option");o.value=c.name;o.textContent=c.name;s.appendChild(o);});}
+function fillOutlets(){var bn=$("selBrand").value,cn=$("selCity").value,s=$("selOutlet");s.innerHTML="<option value=''>-- choose outlet --</option>";s.disabled=!cn;if(!cn)return;var b=cfg.brands.find(function(x){return x.name===bn;});var c=b?b.cities.find(function(x){return x.name===cn;}):null;(c?c.outlets:[]).forEach(function(o){var el=document.createElement("option");el.value=o;el.textContent=o;s.appendChild(el);});}
+$("inpInspector").addEventListener("input",function(){inspector=$("inpInspector").value.trim();save(LS.insp,inspector);});
+$("selBrand").addEventListener("change",function(){fillCities();checkExisting();});
+$("selCity").addEventListener("change",function(){fillOutlets();checkExisting();});
+$("selOutlet").addEventListener("change",checkExisting);
+$("inpDate").addEventListener("change",checkExisting);
+
+function checkExisting(){var hint=$("startHint"),key=findKey();if(!key){hint.textContent="";return;}var ex=sessions.find(matchKeyFn(key));if(ex){hint.textContent=ex.status==="done"?"⚠ A FINISHED visit exists for this outlet+date. Starting will re-open it.":"↩ An OPEN visit exists — you'll resume it.";}else hint.textContent="New visit will be created.";}
+function findKey(){var b=$("selBrand").value,c=$("selCity").value,o=$("selOutlet").value,d=$("inpDate").value;return(b&&c&&o&&d)?{brand:b,city:c,outlet:o,date:d}:null;}
+function sharedWithMe(s){ return !!(loggedIn() && s && s.shared_with && me && s.shared_with.indexOf(me.id)>=0); }
+function isCreator(s){ if(!loggedIn()) return true; return (s.user_id===me.id) || !s.user_id; }
+function isCoInspector(s){ return loggedIn() && s && s.user_id && s.user_id!==me.id && sharedWithMe(s); }
+function inspectorsOf(s){ var a=[s.inspector].concat((s.coInspectors||[]).map(function(c){return c.first;})); return a.filter(Boolean).sort(function(x,y){return (x||"").localeCompare(y||"");}); }
+function othersOf(s){ var mineFirst=(loggedIn()?firstNameOf(me.name):inspector); return inspectorsOf(s).filter(function(n){return n!==mineFirst;}); }
+function mineOnly(s){ if(isStaff()) return true; if(loggedIn()) return (s.user_id===me.id)||sharedWithMe(s)||(!s.user_id&&s.inspector===firstNameOf(me.name)); return true; }
+function matchKeyFn(k){return function(s){return s.brand===k.brand&&s.city===k.city&&s.outlet===k.outlet&&s.date===k.date&&isOwnSession(s);};}
+
+function isOwnSession(s){ if(!loggedIn()) return true; return (s.user_id===me.id)||sharedWithMe(s)||(!s.user_id&&s.inspector===firstNameOf(me.name)); }
+function renderLists(){
+  document.title="Store Visit Report";
+  // MY section (own visits, everyone)
+  var mineOpen=sessions.filter(function(s){return s.status==="open"&&isOwnSession(s);}).sort(byNewest);
+  var mineDone=sessions.filter(function(s){return s.status==="done"&&isOwnSession(s);}).sort(byNewest);
+  var ol=$("openList");ol.innerHTML="";$("openEmpty").style.display=mineOpen.length?"none":"block";mineOpen.forEach(function(s){ol.appendChild(sessCard(s));});
+  var dl=$("doneList");dl.innerHTML="";$("doneEmpty").style.display=mineDone.length?"none":"block";
+  mineDone.slice(0,10).forEach(function(s){dl.appendChild(sessCard(s));});
+  if(mineDone.length>10){var n=document.createElement("p");n.className="muted";n.textContent="Showing the latest 10 of "+mineDone.length+".";dl.appendChild(n);}
+  // TEAM section (all visits, admin/owner only)
+  var staff=isStaff();
+  $("teamCard").classList.toggle("hide", !staff);
+  if(staff){
+    var allDone=sessions.filter(function(s){return s.status==="done";}).sort(byNewest);
+    var td=$("teamDoneList");td.innerHTML="";$("teamDoneEmpty").style.display=allDone.length?"none":"block";
+    allDone.slice(0,10).forEach(function(s){td.appendChild(sessCard(s));});
+    if(allDone.length>10){var n2=document.createElement("p");n2.className="muted";n2.textContent="Showing the latest 10 of "+allDone.length+". Use the export button below for the full list & filters.";td.appendChild(n2);}
+  }
+  $("btnExcel").textContent = "⬇ Export / choose reports to download";
+  updateSyncWarning();
+}
+function visibleSessions(){ return sessions.filter(mineOnly).sort(byNewest); }
+function dayName(iso){ if(!iso) return ""; var D=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]; return D[new Date(iso+"T00:00:00").getDay()]; }
+function buildExportRows(list){
+  var rows=[];
+  list.forEach(function(s){
+    var base={ Inspector:s.inspector||"", Brand:s.brand||"", City:s.city||"", Outlet:s.outlet||"",
+      "Date of visit":s.date||"", Day:dayName(s.date), Arrival:s.arrival||"", Departure:s.departure||"",
+      "Departments (all)":unionDepts(s).join(" / "), Status:s.status||"" };
+    var fs=s.findings||[];
+    if(!fs.length){ rows.push(Object.assign({},base,{"No":"","Type":"","Category":"","Priority":"","Tracked":"","Resolved":"","Menu":"","Finding":"","Suggested Solution":"","Dept":"","Photos":"","Photo":""})); }
+    else fs.forEach(function(f,i){
+      var ps=photosOf(f).map(function(u){return u&&u.indexOf("data:")===0?"(on device)":u;});
+      var photo = ps.length? ps.join("\n") : "";
+      rows.push(Object.assign({},base,{"No":i+1,"Type":f.kind==="fnb"?"Food & Beverage":"Finding","Category":f.category||"","Priority":f.priority?"HIGH":"","Tracked":(f.track||f.issueId)?"Yes":"","Resolved":f.resolved?"Yes":"","Menu":f.menuName||"","Finding":f.text||"","Suggested Solution":f.solution||"","Dept":expandDepts(f.depts).join(", "),"Photos":ps.length,"Photo":photo}));
+    });
+  });
+  return rows;
+}
+function exportExcel(){
+  var list=visibleSessions();
+  if(!list.length){ alert("No visits to export yet."); return; }
+  var rows=buildExportRows(list);
+  var fname="store-visits-"+todayISO();
+  if(window.XLSX){
+    var ws=XLSX.utils.json_to_sheet(rows);
+    ws["!cols"]=[{wch:14},{wch:16},{wch:12},{wch:20},{wch:14},{wch:10},{wch:8},{wch:9},{wch:16},{wch:8},{wch:6},{wch:40},{wch:40},{wch:14},{wch:34}];
+    var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Visits");
+    XLSX.writeFile(wb, fname+".xlsx");
+  } else {
+    var keys=Object.keys(rows[0]);
+    var csv=[keys.join(",")].concat(rows.map(function(r){return keys.map(function(k){var v=(r[k]==null?"":String(r[k]));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}).join(",");})).join("\n");
+    var blob=new Blob([csv],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname+".csv";a.click();
+  }
+}
+$("btnExcel").addEventListener("click",openExportCentre);
+function openExportCentre(){
+  var list=visibleSessions().filter(function(s){return s.status==="done";});
+  if(!list.length){ alert("No finished reports to export yet."); return; }
+  var w=window.open("","_blank");
+  if(!w){ alert("Please allow pop-ups for this site to open the export page."); return; }
+  var json=JSON.stringify(list).replace(/<\/(script)/gi,"<\\/$1");
+  w.document.open(); w.document.write(exportCentreHTML(json, isStaff())); w.document.close();
+}
+function exportCentreHTML(dataJson, staff){
+  var scriptOpen="<scr"+"ipt>", scriptClose="</scr"+"ipt>";
+  var cdn='<scr'+'ipt src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></scr'+'ipt>';
+  return "<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Export Reports</title>"+cdn+
+  "<style>"+
+  "html,body{margin:0;height:auto;overflow-y:auto;-webkit-text-size-adjust:100%}"+
+  "body{font-family:Arial,Helvetica,sans-serif;background:#f4f5f7;color:#1f2937}"+
+  "header{background:#1f2937;color:#fff;padding:14px 16px;font-size:17px;font-weight:700}"+
+  ".wrap{max-width:1100px;margin:0 auto;padding:12px;box-sizing:border-box}"+
+  ".tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e5e7eb;border-radius:12px;background:#fff}"+
+  ".filters{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}"+
+  ".filters label{font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px}"+
+  ".filters input,.filters select{width:100%;padding:9px;border:1px solid #cbd2dc;border-radius:8px;font-size:14px}"+
+  ".bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}"+
+  ".btn{background:#16a34a;color:#fff;border:none;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:600;cursor:pointer}"+
+  ".btn.grey{background:#e5e7eb;color:#1f2937}"+
+  ".count{font-weight:700}"+
+  "table{width:100%;min-width:620px;border-collapse:collapse;background:#fff}"+
+  "th,td{padding:9px 10px;border-bottom:1px solid #eef1f4;font-size:14px;text-align:left;white-space:nowrap}"+
+  "th{background:#f1f5f9;font-weight:700}"+
+  "tr:hover td{background:#f8fafc}"+
+  ".chk{width:18px;height:18px}"+
+  ".muted{color:#6b7280}"+
+  "</style></head><body>"+
+  "<header>📊 Export Reports — tick the reports you want, then download</header>"+
+  "<div class='wrap'>"+
+  "<div class='filters'>"+
+  "<div><label>Date from</label><input type='date' id='fFrom'></div>"+
+  "<div><label>Date to</label><input type='date' id='fTo'></div>"+
+  "<div><label>Brand</label><select id='fBrand'></select></div>"+
+  "<div><label>City</label><select id='fCity'></select></div>"+
+  "<div><label>Outlet</label><select id='fOutlet'></select></div>"+
+  "<div><label>Made by</label><select id='fInsp'></select></div>"+
+  "</div>"+
+  "<div class='bar'>"+
+  "<button class='btn grey' id='bClear'>Clear filters</button>"+
+  "<label class='muted'><input type='checkbox' id='selAll'> Select all (filtered)</label>"+
+  "<span class='muted'>Selected: <span class='count' id='cnt'>0</span></span>"+
+  "<button class='btn' id='bDown' style='margin-left:auto'>⬇ Download selected to Excel</button>"+
+  "</div>"+
+  "<div class='tablewrap'><table><thead><tr><th></th><th>Date</th><th>Day</th><th>Brand</th><th>City</th><th>Outlet</th><th>Made by</th><th>Findings</th></tr></thead><tbody id='tb'></tbody></table></div>"+
+  "<p class='muted' id='empty'></p>"+
+  "</div>"+
+  scriptOpen+
+  "var DATA="+dataJson+";var STAFF="+(staff?"true":"false")+";var SEL={};"+
+  "var REAL_DEPTS=['FOH','BAR','BOH','PASTRY'],ALL_EXPANDS=['FOH','BAR','BOH'];"+
+  "function expandDepts(d){var o=[];(d||[]).forEach(function(x){if(x==='ALL'){ALL_EXPANDS.forEach(function(y){if(o.indexOf(y)<0)o.push(y);});}else if(o.indexOf(x)<0)o.push(x);});return o;}"+
+  "function unionDepts(s){var set={};(s.findings||[]).forEach(function(f){expandDepts(f.depts).forEach(function(d){set[d]=1;});});return REAL_DEPTS.filter(function(d){return set[d];});}"+
+  "function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}"+
+  "var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];"+
+  "function fmtDate(iso){if(!iso)return'';var d=new Date(iso+'T00:00:00');return String(d.getDate()).padStart(2,'0')+' '+MON[d.getMonth()]+' '+d.getFullYear();}"+
+  "function dayName(iso){if(!iso)return'';return DAYS[new Date(iso+'T00:00:00').getDay()];}"+
+  "function fmtLong(iso){if(!iso)return'';var d=new Date(iso+'T00:00:00');var MO=['January','February','March','April','May','June','July','August','September','October','November','December'];return DAYS[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+' '+MO[d.getMonth()]+' '+d.getFullYear();}"+
+  "function val(id){return document.getElementById(id).value;}"+
+  "function distinct(key){var set={};DATA.forEach(function(s){if(s[key])set[s[key]]=1;});return Object.keys(set).sort();}"+
+  "function fillSel(id,vals,label){var el=document.getElementById(id);el.innerHTML=\"<option value=''>\"+label+\"</option>\"+vals.map(function(v){return '<option>'+esc(v)+'</option>';}).join('');}"+
+  "function filtered(){var from=val('fFrom'),to=val('fTo'),b=val('fBrand'),c=val('fCity'),o=val('fOutlet'),ins=val('fInsp');return DATA.filter(function(s){if(from&&(s.date||'')<from)return false;if(to&&(s.date||'')>to)return false;if(b&&s.brand!==b)return false;if(c&&s.city!==c)return false;if(o&&s.outlet!==o)return false;if(ins&&(s.inspector||'')!==ins)return false;return true;});}"+
+  "function render(){var rows=filtered();var tb=document.getElementById('tb');tb.innerHTML='';rows.forEach(function(s){var tr=document.createElement('tr');tr.innerHTML=\"<td><input type='checkbox' class='chk' data-id='\"+esc(s.id)+\"' \"+(SEL[s.id]?'checked':'')+\"></td><td>\"+fmtDate(s.date)+'</td><td>'+dayName(s.date)+'</td><td>'+esc(s.brand||'')+'</td><td>'+esc(s.city||'')+'</td><td>'+esc(s.outlet||'')+'</td><td>'+esc(s.inspector||'')+'</td><td>'+((s.findings||[]).length)+'</td>';tb.appendChild(tr);});document.getElementById('empty').textContent=rows.length?'':'No reports match these filters.';tb.querySelectorAll('.chk').forEach(function(cb){cb.addEventListener('change',function(){SEL[cb.getAttribute('data-id')]=cb.checked;updateCount();});});document.getElementById('selAll').checked=false;updateCount();}"+
+  "function updateCount(){document.getElementById('cnt').textContent=Object.keys(SEL).filter(function(k){return SEL[k];}).length;}"+
+  "function buildRows(list){var rows=[];list.forEach(function(s){var base={Inspector:s.inspector||'',Brand:s.brand||'',City:s.city||'',Outlet:s.outlet||'','Date of visit':s.date||'',Day:dayName(s.date),Arrival:s.arrival||'',Departure:s.departure||'','Departments (all)':unionDepts(s).join(' / '),Status:s.status||''};var fs=s.findings||[];if(!fs.length){rows.push(Object.assign({},base,{'No':'','Type':'','Category':'','Priority':'','Tracked':'','Resolved':'','Menu':'','Finding':'','Suggested Solution':'','Dept':'','Photos':'','Photo':''}));}else fs.forEach(function(f,i){var pa=(f.photos&&f.photos.length?f.photos:(f.photo?[f.photo]:[])).map(function(u){return u&&u.indexOf('data:')===0?'(on device)':u;});rows.push(Object.assign({},base,{'No':i+1,'Type':f.kind==='fnb'?'Food & Beverage':'Finding','Category':f.category||'','Priority':f.priority?'HIGH':'','Tracked':(f.track||f.issueId)?'Yes':'','Resolved':f.resolved?'Yes':'','Menu':f.menuName||'','Finding':f.text||'','Suggested Solution':f.solution||'','Dept':expandDepts(f.depts).join(', '),'Photos':pa.length,'Photo':pa.join('\\n')}));});});return rows;}"+
+  "function download(){var ids=Object.keys(SEL).filter(function(k){return SEL[k];});var chosen=DATA.filter(function(s){return ids.indexOf(s.id)>=0;});if(!chosen.length){alert('Tick at least one report first.');return;}var rows=buildRows(chosen);var fname='store-visits-selected-'+new Date().toISOString().slice(0,10);if(window.XLSX){var ws=XLSX.utils.json_to_sheet(rows);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Visits');XLSX.writeFile(wb,fname+'.xlsx');}else{var keys=Object.keys(rows[0]);var csv=[keys.join(',')].concat(rows.map(function(r){return keys.map(function(k){var v=(r[k]==null?'':String(r[k]));if(/[\",\\n]/.test(v))v='\"'+v.replace(/\"/g,'\"\"')+'\"';return v;}).join(',');})).join('\\n');var blob=new Blob([csv],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname+'.csv';a.click();}}"+
+  "fillSel('fBrand',distinct('brand'),'All brands');fillSel('fCity',distinct('city'),'All cities');fillSel('fOutlet',distinct('outlet'),'All outlets');fillSel('fInsp',distinct('inspector'),'Everyone');"+
+  "['fFrom','fTo','fBrand','fCity','fOutlet','fInsp'].forEach(function(id){document.getElementById(id).addEventListener('change',render);});"+
+  "document.getElementById('selAll').addEventListener('change',function(){var on=this.checked;filtered().forEach(function(s){SEL[s.id]=on;});render();document.getElementById('selAll').checked=on;});"+
+  "document.getElementById('bClear').addEventListener('click',function(){['fFrom','fTo','fBrand','fCity','fOutlet','fInsp'].forEach(function(id){document.getElementById(id).value='';});render();});"+
+  "document.getElementById('bDown').addEventListener('click',download);"+
+  "render();"+
+  scriptClose+
+  "</body></html>";
+}
+function byNewest(a,b){return(b.updated||0)-(a.updated||0);}
+function sessCard(s){var d=document.createElement("div");d.className="sesscard";
+  var pill=s.status==="done"?"<span class='pill done'>DONE</span>":"<span class='pill open'>OPEN</span>";
+  var cloud=s.synced?"<span class='pill cloud'>☁</span>":"<span class='pill local'>device</span>";
+  var shared=(s.coInspectors&&s.coInspectors.length);
+  d.innerHTML="<div class='t'>"+esc(s.brand)+" — "+esc(s.outlet)+" "+pill+" "+cloud+"</div>"+
+    "<div class='m'>"+esc(s.city)+" · "+fmtDateLong(s.date)+" · "+(s.findings?s.findings.length:0)+" finding(s)"+(inspectorsOf(s).length?" · 👤 "+esc(inspectorsOf(s).join(", ")):"")+"</div>"+
+    (shared?"<div class='m' style='color:#b45309'>🤝 Shared report with "+esc(othersOf(s).join(", ")||"team")+"</div>":"");
+  d.addEventListener("click",function(){s.status==="done"?openReport(s):openVisit(s);});return d;}
+
+$("btnStart").addEventListener("click",function(){
+  var k=findKey();if(!k){alert("Please choose Brand, City, Outlet and Date first.");return;}
+  if(!inspector){if(!confirm("You haven't entered your name. Continue anyway?"))return;}
+  var ex=sessions.find(matchKeyFn(k));
+  if(ex){ex.status="open";if(!ex.inspector&&inspector)ex.inspector=inspector;if(!ex.user_id&&me)ex.user_id=me.id;openVisit(ex);return;}
+  var sess={id:uid(),user_id:(me?me.id:null),inspector:inspector||"",brand:k.brand,city:k.city,outlet:k.outlet,date:k.date,arrival:$("inpArrival").value||nowHM(),departure:"",status:"open",findings:[],shared_with:[],coInspectors:[],created:Date.now(),updated:Date.now(),synced:false};
+  sessions.push(sess);persist();openVisit(sess);
+});
+/* ===== Invite co-inspectors (shared visit) ===== */
+var teamProfiles=null;
+async function loadTeamProfiles(force){ if(teamProfiles && !force) return teamProfiles; if(!loggedIn()){teamProfiles=[];return teamProfiles;} try{ var r=await sb.from("profiles").select("id,email,name"); teamProfiles=(r.data||[]); }catch(e){ teamProfiles=teamProfiles||[]; } return teamProfiles; }
+function openInvite(){ if(!current) return; if(!current.shared_with)current.shared_with=[]; if(!current.coInspectors)current.coInspectors=[]; $("inviteSearch").value=""; $("inviteResults").innerHTML=""; $("inviteMsg").textContent=""; renderCoInsp(); $("inviteModal").classList.remove("hide"); loadTeamProfiles(true); }
+function renderCoInsp(){
+  var box=$("coInspList"); box.innerHTML="";
+  (current.coInspectors||[]).forEach(function(c){
+    var d=document.createElement("div"); d.className="coinsp"; d.innerHTML="<span>🤝 "+esc(c.name||c.first)+"</span>";
+    var b=document.createElement("button"); b.type="button"; b.className="fbtn"; b.textContent="✕ Remove"; b.style.color="#9b0a0a"; b.style.borderColor="#9b0a0a";
+    b.addEventListener("click",function(){ removeCoInsp(c.id); });
+    d.appendChild(b); box.appendChild(d);
+  });
+  if(!(current.coInspectors||[]).length) box.innerHTML="<p class='muted' style='font-size:13px'>No co-inspectors yet.</p>";
+}
+function renderInviteResults(){
+  var q=$("inviteSearch").value.trim().toLowerCase(); var box=$("inviteResults"); box.innerHTML="";
+  if(!q) return;
+  var have=(current.shared_with||[]), meId=(me?me.id:null), creatorId=current.user_id;
+  var matches=(teamProfiles||[]).filter(function(p){ return p.id!==meId && p.id!==creatorId && have.indexOf(p.id)<0 && ((p.name||"").toLowerCase().indexOf(q)>=0 || (p.email||"").toLowerCase().indexOf(q)>=0); }).slice(0,8);
+  if(!matches.length){ box.innerHTML="<div class='invite-row muted'>No match — they must have signed up first.</div>"; return; }
+  matches.forEach(function(p){
+    var r=document.createElement("div"); r.className="invite-row"; r.innerHTML="<b>"+esc(p.name||"(no name set)")+"</b> <span class='muted'>"+esc(p.email||"")+"</span>";
+    r.addEventListener("click",function(){ addCoInsp(p); });
+    box.appendChild(r);
+  });
+}
+function addCoInsp(p){
+  var msg=$("inviteMsg"); msg.className="msg";
+  if((current.shared_with||[]).length>=2){ msg.className="msg err"; msg.textContent="You can add up to 2 co-inspectors."; return; }
+  if(!(p.name||"").trim()){ msg.className="msg err"; msg.textContent="That teammate has no name yet — the owner can add it in Manage Team."; return; }
+  current.shared_with=current.shared_with||[]; current.coInspectors=current.coInspectors||[];
+  current.shared_with.push(p.id); current.coInspectors.push({id:p.id, first:firstNameOf(p.name), name:p.name});
+  $("inviteSearch").value=""; $("inviteResults").innerHTML=""; renderCoInsp();
+  current.updated=Date.now(); current.synced=false; pushSession(current,"Co-inspector added"); $("visitHeader").innerHTML=headerHTML(current);
+}
+function removeCoInsp(id){
+  current.shared_with=(current.shared_with||[]).filter(function(x){return x!==id;});
+  current.coInspectors=(current.coInspectors||[]).filter(function(x){return x.id!==id;});
+  renderCoInsp(); current.updated=Date.now(); current.synced=false; pushSession(current,"Co-inspector removed"); $("visitHeader").innerHTML=headerHTML(current);
+}
+$("btnInvite").addEventListener("click",openInvite);
+$("btnPullLatest").addEventListener("click",async function(){ if(!current) return; var b=$("btnPullLatest"), t=b.textContent; b.textContent="↻ Getting..."; b.disabled=true; var ch=await pullMerge(current); b.disabled=false; b.textContent=t; if(ch){ renderFindings(); updateDeptSummary(); $("visitHeader").innerHTML=headerHTML(current); if(!$("reportView").classList.contains("hide")) refreshPreviewPaper(); } });
+$("btnInviteClose").addEventListener("click",function(){ $("inviteModal").classList.add("hide"); });
+$("inviteSearch").addEventListener("input",renderInviteResults);
+$("inviteModal").addEventListener("click",function(e){ if(e.target===this) this.classList.add("hide"); });
+
+function openVisit(s){current=s;draftDepts=[];draftPhotos=[];editingIndex=null;editingFnbIndex=null;$("editArrival").value=s.arrival||nowHM();$("findText").value="";if($("findSolution"))$("findSolution").value="";if($("findPriority"))$("findPriority").checked=false;if($("fnbMenu")){$("fnbMenu").value="";$("fnbText").value="";$("fnbSolution").value="";}clearPhotoPreview();if(typeof clearFnbPhoto==="function")clearFnbPhoto();$("btnAddFinding").textContent="+ Add finding to report";$("btnCancelEdit").classList.add("hide");$("btnAddFnb").textContent="+ Add food/beverage to report";$("btnCancelFnbEdit").classList.add("hide");if($("findTrack"))$("findTrack").checked=false;if($("findResolved"))$("findResolved").checked=false;if($("resolvedRow"))$("resolvedRow").classList.add("hide");if($("respondBanner"))$("respondBanner").classList.add("hide");fnbCat="Beverage";renderFnbCat();respondingIssue=null;outstandingIssues=[];$("outstandingCard").classList.add("hide");if(!s.scores)s.scores={};expandedCats={};renderDeptButtons();renderFindings();updateDeptSummary();updateVisitScoreBtn();$("visitHeader").innerHTML=headerHTML(s);$("barSub").textContent="· "+s.outlet;
+  var doneMode=(s.status==="done"); editingDone=doneMode; cancelEdit();
+  if(!doneMode){ loadOutstanding(s).then(renderOutstanding); } // surface open issues for this store
+  $("btnSave").textContent = doneMode ? "Save changes" : "Save";
+  var creator=isCreator(s), coi=isCoInspector(s);
+  var shared=((s.shared_with&&s.shared_with.length)||(s.coInspectors&&s.coInspectors.length));
+  $("btnInvite").classList.toggle("hide", !(loggedIn() && creator && !doneMode));   // only initiator invites
+  $("btnPullLatest").classList.toggle("hide", !(loggedIn() && shared && !doneMode)); // shared visits: pull teammates' entries
+  $("scoringCard").classList.toggle("hide", !creator);                              // only initiator fills questionnaire
+  if(loggedIn() && shared && !doneMode){ pullMerge(s).then(function(ch){ if(ch && current===s){ renderFindings(); updateDeptSummary(); $("visitHeader").innerHTML=headerHTML(s); } }); }
+  // Cancel = discard in-progress. Hidden when editing a finished report; co-inspectors can't cancel; members only if never finished.
+  $("btnCancel").classList.toggle("hide", doneMode || coi || !(isStaff() || !s.everDone));
+  setSyncBadge(s);show("visitView");}
+function headerHTML(s){var insp=inspectorsOf(s);return "<b>Brand:</b> "+esc(s.brand)+" &nbsp;|&nbsp; <b>City:</b> "+esc(s.city)+" &nbsp;|&nbsp; <b>Outlet:</b> "+esc(s.outlet)+"<br><b>Date of visit:</b> "+fmtDateLong(s.date)+(insp.length?"<br><b>Inspector"+(insp.length>1?"s":"")+":</b> "+esc(insp.join(", ")):"");}
+
+/* ============ Findings draft ============ */
+function renderDeptButtons(){
+  var w=$("deptWrap");w.innerHTML="";
+  REAL_DEPTS.forEach(function(d){
+    var b=document.createElement("button");b.type="button";b.className="dept"+(draftDepts.indexOf(d)>=0?" on":"");b.textContent=d;
+    b.addEventListener("click",function(){var i=draftDepts.indexOf(d);if(i>=0)draftDepts.splice(i,1);else draftDepts.push(d);renderDeptButtons();});
+    w.appendChild(b);
+  });
+  var allOn=ALL_EXPANDS.every(function(x){return draftDepts.indexOf(x)>=0;});
+  var ab=document.createElement("button");ab.type="button";ab.className="dept"+(allOn?" on":"");ab.textContent="ALL";ab.title="Selects FOH + BAR + BOH (not Pastry)";
+  ab.addEventListener("click",function(){
+    if(allOn){ draftDepts=draftDepts.filter(function(x){return ALL_EXPANDS.indexOf(x)<0;}); }
+    else { ALL_EXPANDS.forEach(function(x){ if(draftDepts.indexOf(x)<0) draftDepts.push(x); }); }
+    renderDeptButtons();
+  });
+  w.appendChild(ab);
+}
+$("findPhoto").addEventListener("change",function(e){
+  var files=[].slice.call(e.target.files); e.target.value="";
+  (function next(){ if(!files.length||draftPhotos.length>=MAX_PHOTOS){ renderPhotoPrev(); return; } var f=files.shift(); compressImage(f,function(u){ if(draftPhotos.length<MAX_PHOTOS) draftPhotos.push(u); next(); }); })();
+});
+function renderPhotoPrev(){
+  var box=$("photoPrev"); box.innerHTML="";
+  draftPhotos.forEach(function(u,i){ var t=document.createElement("div"); t.className="t"; t.innerHTML="<img src='"+u+"'><button class='x' type='button'>×</button>"; t.querySelector(".x").addEventListener("click",function(){ draftPhotos.splice(i,1); renderPhotoPrev(); }); box.appendChild(t); });
+  $("findPhotoLbl").style.display = draftPhotos.length>=MAX_PHOTOS ? "none" : "flex";
+}
+function clearPhotoPreview(){draftPhotos=[];$("findPhoto").value="";renderPhotoPrev();}
+/* Merge up to 3 photos into ONE side-by-side image (so a finding = one image everywhere) */
+function combinePhotos(list,cb){
+  list=(list||[]).filter(Boolean);
+  if(list.length===0){ cb(null); return; }
+  if(list.length===1){ cb(list[0]); return; }
+  var imgs=[],loaded=0;
+  list.forEach(function(src,idx){ var im=new Image(); im.onload=function(){imgs[idx]=im;done();}; im.onerror=function(){imgs[idx]=null;done();}; im.src=src; });
+  function done(){ if(++loaded<list.length) return;
+    var H=640,gap=8,x=0,total=0;
+    var sc=imgs.filter(Boolean).map(function(im){var w=Math.round(im.width*H/(im.height||1));total+=w;return {im:im,w:w};});
+    if(!sc.length){ cb(list[0]); return; }
+    total+=gap*(sc.length-1);
+    var c=document.createElement("canvas");c.width=total;c.height=H;var ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,total,H);
+    sc.forEach(function(o){ctx.drawImage(o.im,x,0,o.w,H);x+=o.w+gap;});
+    cb(c.toDataURL("image/jpeg",0.55));
+  }
+}
+function compressImage(file,cb){var reader=new FileReader();reader.onload=function(ev){var img=new Image();img.onload=function(){var max=900,w=img.width,h=img.height;if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}var c=document.createElement("canvas");c.width=w;c.height=h;var ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);cb(c.toDataURL("image/jpeg",0.5));};img.src=ev.target.result;};reader.readAsDataURL(file);}
+
+$("btnAddFinding").addEventListener("click",function(){
+  var txt=$("findText").value.trim();var sol=$("findSolution").value.trim();
+  if(!txt){alert("Finding is required — please describe what you found.");$("findText").focus();return;}
+  var priority=$("findPriority").checked;
+  var track=priority || $("findTrack").checked;
+  var depts=draftDepts.slice();
+  if(depts.length===0 && !respondingIssue){if(!confirm("No department selected. Add finding without a department?"))return;}
+  var editIdx=editingIndex, resp=respondingIssue, resolvedChk=$("findResolved").checked;
+  combinePhotos(draftPhotos.slice(), function(combined){
+    var item={kind:"issue",text:txt,solution:sol,photos:(combined?[combined]:[]),photo:(combined||null),depts:depts,priority:priority,track:track,uid:uid(),_m:Date.now()};
+    if(resp){
+      item.issueId=resp.id;
+      item.depts=(resp.depts&&resp.depts.length)?resp.depts.slice():depts;
+      item.priority=resp.priority||priority;
+      item.track=true;
+      item.history=(resp.history||[]).slice();
+      item.firstDate=resp.created_date; item.firstName=resp.created_name;
+      item.resolved=resolvedChk;
+    }
+    if(editIdx!=null){ var prev=current.findings[editIdx]; item.uid=prev.uid||item.uid; item._m=Date.now(); if(prev.issueId){ item.issueId=prev.issueId; item.history=prev.history; item.firstDate=prev.firstDate; item.firstName=prev.firstName; item.resolved=resolvedChk; item.track=true; item.priority=prev.priority; item.depts=prev.depts; } current.findings[editIdx]=item; }
+    else { current.findings.push(item); }
+    current.updated=Date.now();current.synced=false;cancelEdit();updateDeptSummary();persist();setSyncBadge(current);
+  });
+});
+function cancelEdit(){editingIndex=null;respondingIssue=null;$("btnAddFinding").textContent="+ Add finding to report";$("btnCancelEdit").classList.add("hide");$("findFormTitle").textContent="Add a finding";$("respondBanner").classList.add("hide");$("resolvedRow").classList.add("hide");$("findResolved").checked=false;$("findText").value="";if($("findSolution"))$("findSolution").value="";$("findPriority").checked=false;$("findTrack").checked=false;draftDepts=[];clearPhotoPreview();renderDeptButtons();renderFindings();}
+function startEditFinding(idx){var f=current.findings[idx];if(f.kind==="fnb"){return startEditFnb(idx);}show("visitView");$("barSub").textContent="· "+(current?current.outlet:"");respondingIssue=null;$("respondBanner").classList.add("hide");$("findText").value=f.text||"";if($("findSolution"))$("findSolution").value=f.solution||"";$("findPriority").checked=!!f.priority;$("findTrack").checked=!!f.track;draftDepts=(f.depts||[]).slice();draftPhotos=(f.photos&&f.photos.length?f.photos.slice():(f.photo?[f.photo]:[]));renderPhotoPrev();renderDeptButtons();editingIndex=idx;if(f.issueId){$("resolvedRow").classList.remove("hide");$("resolvedRow").style.display="flex";$("findResolved").checked=!!f.resolved;}else{$("resolvedRow").classList.add("hide");}$("btnAddFinding").textContent="✔ Update finding";$("btnCancelEdit").classList.remove("hide");if($("findText").scrollIntoView)$("findText").scrollIntoView({block:"center"});}
+$("btnCancelEdit").addEventListener("click",cancelEdit);
+$("respondCancel").addEventListener("click",function(e){e.preventDefault();cancelEdit();});
+
+/* ---- Food & Beverage ---- */
+$("fnbPhoto").addEventListener("change",function(e){var file=e.target.files[0];if(!file)return;compressImage(file,function(u){draftFnbPhoto=u;$("fnbPhotoPrevImg").src=u;$("fnbPhotoPrev").classList.remove("hide");});});
+$("fnbPhotoClear").addEventListener("click",clearFnbPhoto);
+function clearFnbPhoto(){draftFnbPhoto=null;$("fnbPhoto").value="";$("fnbPhotoPrev").classList.add("hide");$("fnbPhotoPrevImg").src="";}
+$("btnAddFnb").addEventListener("click",function(){
+  var menu=$("fnbMenu").value.trim();var txt=$("fnbText").value.trim();var sol=$("fnbSolution").value.trim();
+  if(!menu){alert("Menu name is required.");$("fnbMenu").focus();return;}
+  if(!txt){alert("Finding is required for the food/beverage.");$("fnbText").focus();return;}
+  if(!draftFnbPhoto){alert("A photo is required for food/beverage.");return;}
+  var item={kind:"fnb",category:fnbCat,menuName:menu,text:txt,solution:sol,photo:draftFnbPhoto,depts:[],uid:uid(),_m:Date.now()};
+  if(editingFnbIndex!=null){var pf=current.findings[editingFnbIndex];item.uid=pf.uid||item.uid;current.findings[editingFnbIndex]=item;}else{current.findings.push(item);}
+  current.updated=Date.now();current.synced=false;cancelFnbEdit();persist();setSyncBadge(current);
+});
+function cancelFnbEdit(){editingFnbIndex=null;$("btnAddFnb").textContent="+ Add food/beverage to report";$("btnCancelFnbEdit").classList.add("hide");fnbCat="Beverage";renderFnbCat();$("fnbMenu").value="";$("fnbText").value="";$("fnbSolution").value="";clearFnbPhoto();renderFindings();}
+function startEditFnb(idx){var f=current.findings[idx];show("visitView");$("barSub").textContent="· "+(current?current.outlet:"");fnbCat=f.category||"Beverage";renderFnbCat();$("fnbMenu").value=f.menuName||"";$("fnbText").value=f.text||"";$("fnbSolution").value=f.solution||"";draftFnbPhoto=f.photo||null;if(draftFnbPhoto){$("fnbPhotoPrevImg").src=draftFnbPhoto;$("fnbPhotoPrev").classList.remove("hide");}else{clearFnbPhoto();}editingFnbIndex=idx;$("btnAddFnb").textContent="✔ Update food/beverage";$("btnCancelFnbEdit").classList.remove("hide");if($("fnbMenu").scrollIntoView)$("fnbMenu").scrollIntoView({block:"center"});}
+$("btnCancelFnbEdit").addEventListener("click",cancelFnbEdit);
+
+/* ---- Outstanding issues (recall / respond) ---- */
+function storeKeyOf(s){ return (s.brand||"")+"|"+(s.city||"")+"|"+(s.outlet||""); }
+async function loadOutstanding(s){
+  outstandingIssues=[];
+  if(!loggedIn()) return;
+  try{
+    var q=sb.from("issues").select("*").eq("store_key",storeKeyOf(s)).eq("status","open");
+    if(!isStaff()) q=q.eq("created_by", me.id);
+    var r=await q; if(!r.error) outstandingIssues=r.data||[];
+  }catch(e){}
+}
+function respondedIds(){ return (current.findings||[]).filter(function(f){return f.issueId;}).map(function(f){return f.issueId;}); }
+function renderOutstanding(){
+  var card=$("outstandingCard"), list=$("outstandingList"); list.innerHTML="";
+  var done=respondedIds();
+  var open=outstandingIssues.filter(function(i){return done.indexOf(i.id)<0;});
+  if(!open.length){ card.classList.add("hide"); return; }
+  card.classList.remove("hide");
+  // high priority first
+  open.sort(function(a,b){return (b.priority?1:0)-(a.priority?1:0);});
+  open.forEach(function(iss){
+    var row=document.createElement("div"); row.className="finding"; if(iss.priority)row.style.background="#fef9c3";
+    var visits=(iss.history||[]).length;
+    row.innerHTML="<div class='body'>"+(iss.priority?"<span class='tag' style='background:#fef08a;color:#854d0e'>⚠️ HIGH PRIORITY</span> ":"")+"<b>"+esc(iss.title||"")+"</b><div class='muted' style='margin-top:2px'>"+(iss.depts||[]).join(", ")+" · first reported "+esc(iss.created_date||"")+" by "+esc(iss.created_name||"")+" · "+visits+" visit(s) so far</div></div>";
+    var b=document.createElement("button"); b.className="btn small"; b.textContent="Respond / update"; b.style.marginTop="8px";
+    b.addEventListener("click",function(){ startRespond(iss); });
+    row.appendChild(b); list.appendChild(row);
+  });
+}
+function startRespond(iss){
+  cancelEdit();
+  respondingIssue=iss;
+  $("findFormTitle").textContent="Respond to open issue";
+  $("respondTitle").textContent=iss.title||"";
+  $("respondFirst").textContent=(iss.created_date||"")+" by "+(iss.created_name||"");
+  $("respondBanner").classList.remove("hide");
+  $("resolvedRow").classList.remove("hide"); $("resolvedRow").style.display="flex"; $("findResolved").checked=false;
+  $("findText").value=""; if($("findSolution"))$("findSolution").value="";
+  draftDepts=(iss.depts||[]).slice(); renderDeptButtons();
+  $("findPriority").checked=!!iss.priority; $("findTrack").checked=true;
+  clearPhotoPreview();
+  $("btnAddFinding").textContent="✔ Add response to report";
+  if($("findText").scrollIntoView)$("findText").scrollIntoView({block:"center"});
+}
+function renderFindings(){
+  ensureUids(current);
+  var list=$("findingList"); list.innerHTML="";
+  var all=current.findings||[]; $("findCount").textContent=all.length; $("findEmpty").style.display=all.length?"none":"block";
+  buildReorderGroups().forEach(function(g){
+    if(!g.items.length) return;
+    var sec=document.createElement("div"); sec.className="reorder-group";
+    var h=document.createElement("div"); h.className="rg-h"; h.textContent=g.label; sec.appendChild(h);
+    var pinned=g.items.filter(function(x){return x.priority;});
+    var movable=g.items.filter(function(x){return !x.priority;});
+    var n=0;
+    if(pinned.length){ var pd=document.createElement("div"); pd.className="rg-pinned"; pinned.forEach(function(item){ pd.appendChild(buildFindingRow(item,++n,true)); }); sec.appendChild(pd); }
+    var ml=document.createElement("div"); ml.className="rg-list"; ml.setAttribute("data-gkey",g.key);
+    movable.forEach(function(item){ ml.appendChild(buildFindingRow(item,++n,false)); });
+    sec.appendChild(ml);
+    list.appendChild(sec);
+    makeGroupSortable(ml,g.key);
+  });
+}
+function buildReorderGroups(){
+  var f=current.findings||[]; var res=[];
+  REAL_DEPTS.forEach(function(d){
+    var items=orderByGroup(f.filter(function(x){return x.kind!=="fnb" && expandDepts(x.depts).indexOf(d)>=0;}), d, current);
+    if(items.length) res.push({key:d,label:d,items:items});
+  });
+  var gen=orderByGroup(f.filter(function(x){return x.kind!=="fnb" && expandDepts(x.depts).length===0;}), "__none__", current);
+  if(gen.length) res.push({key:"__none__",label:"General (no department)",items:gen});
+  ["Beverage","Food","Pastry"].forEach(function(c){
+    var items=orderByGroup(f.filter(function(x){return x.kind==="fnb" && (x.category||"")===c;}), "FNB:"+c, current);
+    if(items.length) res.push({key:"FNB:"+c,label:"F&B · "+c,items:items});
+  });
+  var other=orderByGroup(f.filter(function(x){return x.kind==="fnb" && ["Beverage","Food","Pastry"].indexOf(x.category||"")<0;}), "FNB:Other", current);
+  if(other.length) res.push({key:"FNB:Other",label:"F&B · Other",items:other});
+  return res;
+}
+function buildFindingRow(item,num,pinned){
+  var row=document.createElement("div"); row.className="finding"+(pinned?" pinned":""); row.setAttribute("data-uid",item.uid); if(item.priority)row.style.background="#fef9c3";
+  var tags=(item.depts||[]).map(function(d){return "<span class='tag'>"+d+"</span>";}).join("");
+  var kindTag=item.kind==="fnb"?"<span class='tag' style='background:#fce7f3;color:#9d174d'>"+esc(item.category||"F&B")+"</span>":"";
+  var prio=item.priority?"<span class='tag' style='background:#fef08a;color:#854d0e'>⚠️ HIGH PRIORITY</span>":"";
+  var issueTag=item.issueId?"<span class='tag' style='background:#e0f2fe;color:#075985'>🔁 follow-up"+(item.resolved?" · ✅ resolved":"")+"</span>":(item.track?"<span class='tag' style='background:#e0f2fe;color:#075985'>🔁 tracked</span>":"");
+  var menu=item.kind==="fnb"?"<div style='font-weight:700'>🍽 "+esc(item.menuName||"")+"</div>":"";
+  var photos=photosOf(item).map(function(p){return "<img src='"+p+"'>";}).join("");
+  var handle=pinned?"<div class='draghandle pinnedlock' title='High priority — pinned to top'>📌</div>":"<div class='draghandle' title='Drag to reorder'>☰</div>";
+  row.innerHTML=handle+"<div class='no'>"+num+"</div><div class='body'>"+menu+"<div class='txt'>"+esc(item.text||"(photo only)")+"</div>"+(item.solution?"<div class='muted' style='margin-top:4px'>💡 <b>Solution:</b> "+esc(item.solution)+"</div>":"")+"<div class='tags'>"+prio+issueTag+kindTag+tags+"</div><div class='factions'><button type='button' class='fbtn edit' style='color:#3b2314;border-color:#3b2314'>✎ Edit</button><button type='button' class='fbtn del' style='color:#9b0a0a;border-color:#9b0a0a'>✕ Remove</button></div></div>"+(photos?"<div class='fphoto'>"+photos+"</div>":"");
+  row.querySelector(".edit").addEventListener("click",function(){ var i=current.findings.indexOf(item); if(i>=0) startEditFinding(i); });
+  row.querySelector(".del").addEventListener("click",function(){ var i=current.findings.indexOf(item); if(i<0)return; if(confirm("Remove this entry permanently? This cannot be undone.")){ var rmf=current.findings[i]; current.deleted=current.deleted||{}; if(rmf&&rmf.uid) current.deleted[rmf.uid]=Date.now(); current.findings.splice(i,1); current.updated=Date.now(); current.synced=false; renderFindings(); updateDeptSummary(); persist(); refreshPreviewPaper(); } });
+  return row;
+}
+function makeGroupSortable(el,gkey){
+  if(!window.Sortable) return;
+  window.Sortable.create(el,{handle:".draghandle",animation:150,onEnd:function(){
+    var ids=[].slice.call(el.querySelectorAll("[data-uid]")).map(function(r){return r.getAttribute("data-uid");});
+    current.deptOrder=current.deptOrder||{}; current.deptOrder[gkey]=ids;
+    current.updated=Date.now(); current.synced=false; persist(); refreshPreviewPaper();
+  }});
+}
+function refreshPreviewPaper(){ if(current && $("reportView") && !$("reportView").classList.contains("hide")) $("reportPaper").innerHTML=reportHTML(current); }
+function updateDeptSummary(){$("deptSummary").value=unionDepts(current).join(" / ")||"—";}
+$("editArrival").addEventListener("change",function(){if(current){current.arrival=$("editArrival").value;current.updated=Date.now();current.synced=false;persist();}});
+
+$("btnSave").addEventListener("click",async function(){current.arrival=$("editArrival").value||current.arrival;current.updated=Date.now();await pushSession(current,editingDone?"Changes saved":"Saved");if(editingDone)openReport(current);});
+function finishVisit(){var sc=computeScores(current);if(summaryRequired()){var sm=(current.summary||"").trim();if(sm.length<SUMMARY_MIN){alert("A summary / foreword of at least "+SUMMARY_MIN+" characters is required before finishing (currently "+sm.length+").");show("reportView");updateSummaryHint();var el=$("reportSummary");if(el){el.focus();if(el.scrollIntoView)el.scrollIntoView({block:"center"});}return;}}if((current.findings||[]).length===0&&sc.answered===0){if(!confirm("No findings and no questionnaire answered. End the visit anyway?"))return;}if(!confirm("End this visit? Departure time will be recorded as now."))return;current.status="done";current.everDone=true;current.departure=nowHM();current.arrival=$("editArrival").value||current.arrival;current.updated=Date.now();pushSession(current,"Done");openReport(current);}
+$("btnBackHome").addEventListener("click",function(){renderLists();$("barSub").textContent="";show("homeView");});
+$("btnViewReport").addEventListener("click",function(){openReport(current);});
+
+function setSyncBadge(s){var el=$("syncStatus");if(!cloudConfigured()){el.className="synced off";el.textContent="Offline mode (device-only).";return;}if(!loggedIn()){el.className="synced off";el.textContent="Not signed in — saved on device, sign in to sync.";return;}if(s.synced){el.className="synced ok";el.textContent="✓ Synced to cloud";}else{el.className="synced off";el.textContent="Saved on device — press Save to sync to cloud";}}
+
+/* ============ Report ============ */
+/* ================= Scoring / audit ================= */
+var SCORE_GROUPS=(function(){var g=[],idx={};SCORE_TEMPLATE.forEach(function(t,i){var k=t[0]+"|"+t[1];if(idx[k]===undefined){idx[k]=g.length;g.push({dept:t[0],cat:t[1],items:[]});}g[idx[k]].items.push({i:i,q:t[2],p:t[3],key:t[0]+"¦"+t[1]+"¦"+t[2]});});return g;})();
+/* Answers are stored keyed by this stable text key (dept¦category¦question), NOT by
+   position — so adding/reordering questions later never corrupts repeat history. */
+var SCORE_TOTAL=SCORE_TEMPLATE.length;
+var expandedCats={};
+// Questionnaire pages: FOH → BOH → BAR → Overall.
+// "Overall" = the outlet-wide FOH categories that appear after BOH in the sheet;
+// they are tagged FOH in the scoring file, so they roll into the FOH department score.
+var QPAGES=(function(){ var fe=[],fl=[],bar=[],boh=[],seen=false;
+  SCORE_GROUPS.forEach(function(g){
+    if(g.dept==="FOH"){ (seen?fl:fe).push(g); }
+    else { seen=true; if(g.dept==="BAR")bar.push(g); else if(g.dept==="BOH")boh.push(g); else fe.push(g); }
+  });
+  return [{key:"FOH",title:"FOH",groups:fe},{key:"BOH",title:"BOH",groups:boh},{key:"BAR",title:"BAR",groups:bar},{key:"Overall",title:"Overall",groups:fl}];
+})();
+var qPage=0;
+function clampScore(n){return Math.max(0,Math.min(100,n));}
+/* Grade bands: A 81-100, B 61-80, C 51-60, D <51 (per Scoring System). */
+function gradeOf(n){ if(n==null||isNaN(n))return "—"; if(n>=81)return "A"; if(n>=61)return "B"; if(n>=51)return "C"; return "D"; }
+// Prior finished visits to the SAME outlet that carried a questionnaire, newest first.
+function priorScoredVisits(s){
+  return ((typeof sessions!=="undefined"?sessions:[])||[]).filter(function(x){
+    return x && x.id!==s.id && x.status==="done" && x.scores && Object.keys(x.scores||{}).length
+      && x.brand===s.brand && x.city===s.city && x.outlet===s.outlet && (x.date||"") < (s.date||"￿");
+  }).sort(function(a,b){ return (b.date||"").localeCompare(a.date||"") || (b.updated||0)-(a.updated||0); });
+}
+// How many consecutive previous visits this item stayed "Tidak" (1 = failed last visit too).
+function repeatCountFor(priors, i){ var c=0; for(var k=0;k<priors.length;k++){ var v=(priors[k].scores||{})[i]; if(v==="tidak"){c++;} else break; } return c; }
+function computeScores(s){
+  var sc=(s&&s.scores)||{}, oE=0,oP=0,answered=0,reqMissing=0;
+  var priors=priorScoredVisits(s);
+  var cats=SCORE_GROUPS.map(function(g){
+    var e=0,p=0,ans=0;
+    g.items.forEach(function(it){var a=sc[it.key]; if(a) ans++;
+      if(a==="ya"){e+=it.p;p+=it.p;}
+      else if(a==="tidak"){ p+=it.p; var rc=repeatCountFor(priors,it.key); if(rc>0) e-=rc*it.p; }  // repeat penalty: -points × times repeated
+      if(it.p>0 && !a) reqMissing++;
+    });
+    oE+=e;oP+=p;answered+=ans;
+    return {dept:g.dept,cat:g.cat,total:g.items.length,answered:ans,earned:e,poss:p,score:(p>0?clampScore(Math.round(e/p*100)):null)};
+  });
+  return {overall:(oP>0?clampScore(Math.round(oE/oP*100)):null),cats:cats,answered:answered,total:SCORE_TOTAL,reqMissing:reqMissing};
+}
+function updateVisitScoreBtn(){
+  var b=$("btnScoring"); if(!b) return;
+  var c=computeScores(current||{});
+  if(current&&current.scoreSkipped) b.textContent="Questionnaire skipped";
+  else if(current&&current.scoreSubmitted) b.textContent="Questionnaire completed ✓";
+  else if(c.answered>0) b.textContent="Continue questionnaire →";
+  else b.textContent="Start questionnaire →";
+}
+function openScoring(){ if(!current) return; if(!current.scores) current.scores={}; qPage=0; $("barSub").textContent="· questionnaire"; renderScoring(); show("scoringView"); }
+function updateScoreHeader(){ if($("scProg")){ var c=computeScores(current); $("scProg").textContent=c.answered+" / "+c.total+" answered"+(current&&current.scoreSubmitted?" · submitted (locked)":""); } }
+function renderScoring(){
+  var pg=QPAGES[qPage], last=(qPage===QPAGES.length-1), locked=!!(current&&current.scoreSubmitted);
+  var prevTxt=(qPage===0?"visit":QPAGES[qPage-1].title);
+  $("qTitle").textContent="Audit Questionnaire — "+pg.title+"  ("+(qPage+1)+" of "+QPAGES.length+")";
+  $("qHeadBack").textContent="← Back to "+prevTxt;
+  $("qFootBack").textContent="← Back to "+prevTxt;
+  var nextBtn=$("qFootNext");
+  if(last){ nextBtn.textContent = locked ? "Back to preview →" : "Submit →"; }
+  else { nextBtn.textContent="Continue to next section →"; }
+  nextBtn.className="btn proceed"; nextBtn.style.background="";
+  $("btnSkipQ").classList.toggle("hide", locked);   // can't skip once already submitted/skipped
+  var box=$("scoreList"); box.className=locked?"locked":""; box.innerHTML="";
+  var dh=document.createElement("div"); dh.className="sdept"; dh.textContent=pg.title+(pg.key==="Overall"?"  (scored under FOH)":""); box.appendChild(dh);
+  if(locked){ var lb=document.createElement("div"); lb.className="lockbanner"; lb.textContent="Submitted — answers are locked."; box.appendChild(lb); }
+  pg.groups.forEach(function(g){
+    var card=document.createElement("div"); card.className="scat";
+    var head=document.createElement("div"); head.className="scat-h static";
+    head.innerHTML="<span class='cn'>"+esc(g.cat)+"</span>";
+    card.appendChild(head);
+    var body=document.createElement("div"); body.className="scat-body";
+    buildScoreItems(body,g,card);
+    card.appendChild(body);
+    box.appendChild(card);
+  });
+  updateScoreHeader();
+  window.scrollTo(0,0);
+}
+function updateCatHeader(card,g){ /* per-category score no longer shown */ }
+function onScoreChange(){ if(current){ current.updated=Date.now(); current.synced=false; persist(); } updateVisitScoreBtn(); }
+function buildScoreItems(body,g,card){
+  body.innerHTML="";
+  var locked=!!(current&&current.scoreSubmitted);
+  g.items.forEach(function(it){
+    var row=document.createElement("div"); row.className="sitem";
+    row.innerHTML="<div class='q'>"+esc(it.q)+"</div>";
+    var bts=document.createElement("div"); bts.className="sbtns";
+    [["ya","Ya"],["tidak","Tidak"],["na","N/A"]].forEach(function(o){
+      var b=document.createElement("button"); b.type="button"; b.className="sbtn "+o[0]+(current.scores[it.key]===o[0]?" on":""); b.textContent=o[1];
+      if(locked){ b.disabled=true; }
+      else b.addEventListener("click",function(){ if(current.scores[it.key]===o[0]) delete current.scores[it.key]; else current.scores[it.key]=o[0]; bts.querySelectorAll(".sbtn").forEach(function(x){x.classList.remove("on");}); if(current.scores[it.key]) b.classList.add("on"); onScoreChange(); updateScoreHeader(); });
+      bts.appendChild(b);
+    });
+    row.appendChild(bts);
+    var note=document.createElement("input"); note.type="text"; note.className="snote"; note.maxLength=100; note.placeholder="Note (optional, max 100 chars)"; note.value=(current.scoreNotes&&current.scoreNotes[it.key])||"";
+    if(locked){ note.disabled=true; }
+    else note.addEventListener("input",function(){ current.scoreNotes=current.scoreNotes||{}; if(this.value) current.scoreNotes[it.key]=this.value; else delete current.scoreNotes[it.key]; onScoreChange(); });
+    row.appendChild(note);
+    body.appendChild(row);
+  });
+}
+function qGoBack(){ if(qPage===0){ show("visitView"); $("barSub").textContent="· "+(current?current.outlet:""); updateVisitScoreBtn(); } else { qPage--; renderScoring(); } }
+function qGoNext(){ if(qPage < QPAGES.length-1){ qPage++; renderScoring(); } else if(current&&current.scoreSubmitted){ openReport(current); } else { submitQuestionnaire(); } }
+function submitQuestionnaire(){ if(!confirm("Submit your report? Once submitted, you can't change the answers.")) return; current.scoreSubmitted=true; current.scoreSkipped=false; current.updated=Date.now(); current.synced=false; persist(); openReport(current); }
+async function skipQuestionnaire(){
+  if(!current) return;
+  if(!loggedIn() || isQExempt(me.id)){
+    if(!confirm("Skip the questionnaire for this visit? The report will show \"Questionnaire not completed\".")) return;
+  } else {
+    var pass=prompt("You're not exempt from the questionnaire. Enter YOUR login password to skip it:");
+    if(pass===null) return;
+    var ok=await verifyPassword(pass);
+    if(!ok){ alert("Password incorrect — questionnaire not skipped."); return; }
+  }
+  current.scoreSkipped=true; current.scoreSubmitted=true; current.updated=Date.now(); current.synced=false; persist(); openReport(current);
+}
+$("btnSkipQ").addEventListener("click",skipQuestionnaire);
+$("btnScoring").addEventListener("click",openScoring);
+$("qHeadBack").addEventListener("click",qGoBack);
+$("qFootBack").addEventListener("click",qGoBack);
+$("qFootNext").addEventListener("click",qGoNext);
+
+function reportName(s){
+  var dt=(s.date||"").replace(/-/g," ");   // yyyy mm dd
+  var parts=["Store Visit Report",[s.brand,s.city].filter(Boolean).join(" "),s.outlet,dt,s.inspector].filter(function(x){return x&&(""+x).trim();});
+  return parts.join(" - ").replace(/[\\/:*?"<>|]/g," ").replace(/\s+/g," ").trim();
+}
+function openReport(s){
+  current=s;$("reportSummary").value=s.summary||"";updateSummaryHint();$("reportPaper").innerHTML=reportHTML(s);$("barSub").textContent="· report";$("reqMsg").textContent="";
+  document.title=reportName(s);   // becomes the default "Save as PDF" file name
+  var staff=(isStaff()&&loggedIn());
+  var member=(loggedIn()&&!isStaff());
+  var openMode=(s.status!=="done");
+  $("reportActionsOpen").classList.toggle("hide", !openMode);   // in-progress preview
+  $("reportActionsDone").classList.toggle("hide", openMode);    // finished report
+  $("findingsEditCard").classList.toggle("hide", !openMode);   // reorder/edit/remove only in preview
+  if(openMode){
+    var sharedP=((s.shared_with&&s.shared_with.length)||(s.coInspectors&&s.coInspectors.length));
+    if(loggedIn()&&sharedP){ pullMerge(s).then(function(ch){ if(ch && current===s && !$("reportView").classList.contains("hide")){ renderFindings(); refreshPreviewPaper(); } }); }
+    renderFindings();
+    var coi=isCoInspector(s);
+    var submitted=!!s.scoreSubmitted, pv=$("btnPvDone");
+    pv.textContent = submitted ? "Done — end visit & record departure" : "Proceed to questionnaire →";
+    pv.className = "btn proceed";
+    pv.style.background = "";
+    // Co-inspectors add/edit entries only; the initiator does summary, questionnaire & finish.
+    $("summaryEditRow").classList.toggle("hide", coi);
+    pv.classList.toggle("hide", coi);
+    $("btnPvCancel").classList.toggle("hide", coi);
+  }
+  $("btnDeleteReport").classList.toggle("hide", !staff);
+  // members: request-deletion only for FINISHED reports
+  $("btnRequestDelete").classList.toggle("hide", !(member && s.status==="done"));
+  $("btnEditReport").classList.toggle("hide", !canEdit(s));
+  show("reportView");
+}
+$("btnPvBack").addEventListener("click",function(){ renderLists(); $("barSub").textContent=""; show("homeView"); });
+$("btnPvAdd").addEventListener("click",function(){ if(current){ openVisit(current); var el=$("findText"); if(el&&el.scrollIntoView) el.scrollIntoView({block:"center"}); } });
+$("btnPvCancel").addEventListener("click",discardVisit);
+$("btnPvDone").addEventListener("click",function(){ if(!current)return; if(current.scoreSubmitted) finishVisit(); else openScoring(); });
+var SUMMARY_MIN=50;
+function summaryRequired(){ return loggedIn() && !isStaff(); }   // members only
+function updateSummaryHint(){
+  var h=$("summaryHint"); if(!h) return;
+  var len=($("reportSummary").value||"").trim().length;
+  if(summaryRequired()){ h.innerHTML="Required — minimum "+SUMMARY_MIN+" characters. <b>"+len+" / "+SUMMARY_MIN+"</b>"+(len>=SUMMARY_MIN?" ✓":""); h.style.color=(len>=SUMMARY_MIN?"var(--green)":"var(--red)"); }
+  else { h.innerHTML="Optional. Saved automatically when you click away."; h.style.color=""; }
+}
+$("reportSummary").addEventListener("input",function(){ if(current){ current.summary=this.value; current.updated=Date.now(); current.synced=false; } updateSummaryHint(); });
+$("reportSummary").addEventListener("change",function(){ if(!current)return; current.summary=this.value; $("reportPaper").innerHTML=reportHTML(current); pushSession(current,"Summary saved"); });
+function withinDays(iso,n){ if(!iso) return true; var lim=new Date(iso+"T00:00:00").getTime()+n*86400000; var t=new Date(); t.setHours(0,0,0,0); return t.getTime()<=lim; }
+function canEdit(s){
+  if(!loggedIn()) return true;                 // local single-user
+  var own=(s.user_id===me.id)||(!s.user_id&&s.inspector===me.name);
+  if(!own) return false;                        // nobody edits others' reports
+  if(isOwner()) return true;                    // owner: own, anytime
+  if(me.role==="admin") return withinDays(s.date,7);  // admin: own, within 7 days of visit
+  return false;                                 // member: no edit (view + request-delete)
+}
+$("btnEditReport").addEventListener("click", function(){ if(current) openVisit(current); });
+
+async function deleteVisit(id){
+  sessions=sessions.filter(function(x){return x.id!==id;}); persist();
+  if(loggedIn()){ try{ var r=await sb.from(TABLE).delete().eq("id",id); if(r.error) return r.error.message; }catch(e){ return (e.message||String(e)); } }
+  return null;
+}
+async function verifyPassword(pass){
+  if(!me||!sb) return false;
+  try{ var r=await sb.auth.signInWithPassword({email:me.email, password:pass}); return !r.error; }catch(e){ return false; }
+}
+async function discardVisit(){
+  if(!current) return;
+  if(!confirm("Discard this in-progress visit and remove it completely? This cannot be undone.")) return;
+  var id=current.id; current=null;
+  var err=await deleteVisit(id);
+  if(err){ alert("Removed on device, but cloud delete failed: "+err); }
+  renderLists(); $("barSub").textContent=""; show("homeView");
+}
+$("btnCancel").addEventListener("click",discardVisit);
+/* ---- Member: request deletion ---- */
+$("btnRequestDelete").addEventListener("click", async function(){
+  if(!loggedIn()){ alert("Sign in first."); return; }
+  var s=current, msg=$("reqMsg"); msg.className="msg";
+  var reason=prompt("Why should this report be deleted? (required — an admin will review)");
+  if(reason===null) return;
+  reason=(reason||"").trim();
+  if(!reason){ msg.className="msg err"; msg.textContent="A reason is required."; return; }
+  msg.textContent="Sending request...";
+  try{
+    // avoid duplicate pending requests for the same report
+    var ex=await sb.from(REQTABLE).select("id").eq("visit_id",s.id).eq("status","pending").limit(1);
+    if(!ex.error && ex.data && ex.data.length){ msg.className="msg ok"; msg.textContent="You already have a pending request for this report."; return; }
+    var info={ brand:s.brand, city:s.city, outlet:s.outlet, date:s.date, inspector:s.inspector };
+    var r=await sb.from(REQTABLE).insert({ visit_id:s.id, requester_name:(me.name||me.email), reason:reason, visit_info:info });
+    if(r.error) throw r.error;
+    msg.className="msg ok"; msg.textContent="✓ Request sent. An admin will review it.";
+    $("btnRequestDelete").classList.add("hide");
+  }catch(err){ msg.className="msg err"; msg.textContent="Couldn't send request: "+(err.message||err); }
+});
+
+/* ---- Staff: pending requests badge + review screen ---- */
+async function refreshPending(){
+  pendingReqs=[];
+  if(!(isStaff()&&loggedIn())){ $("btnRequestsBanner").classList.add("hide"); return; }
+  try{
+    var r=await sb.from(REQTABLE).select("*").eq("status","pending").order("created_at",{ascending:true});
+    if(!r.error){ pendingReqs=r.data||[]; }
+  }catch(e){}
+  var n=pendingReqs.length;
+  $("reqCount").textContent=n;
+  $("btnRequestsBanner").classList.toggle("hide", n===0);
+}
+$("btnRequestsBanner").addEventListener("click",openRequests);
+$("btnReqBack").addEventListener("click",function(){initHome();});
+$("btnReqRefresh").addEventListener("click",async function(){ await refreshPending(); renderRequests(); });
+async function openRequests(){ $("barSub").textContent="· requests"; show("requestsView"); await refreshPending(); renderRequests(); }
+function renderRequests(){
+  var box=$("reqList"), msg=$("reqScreenMsg"); msg.textContent="";
+  box.innerHTML="";
+  if(!pendingReqs.length){ box.innerHTML="<p class='muted'>No pending requests. 🎉</p>"; return; }
+  pendingReqs.forEach(function(req){
+    var vi=req.visit_info||{};
+    var row=document.createElement("div"); row.className="card"; row.style.padding="12px"; row.style.margin="0 0 10px";
+    row.innerHTML="<div><b>"+esc(vi.brand||"")+" — "+esc(vi.outlet||"")+"</b></div>"+
+      "<div class='muted'>"+esc(vi.city||"")+" · "+esc(vi.date||"")+" · inspector: "+esc(vi.inspector||"")+"</div>"+
+      "<div style='margin:8px 0'><b>Requested by:</b> "+esc(req.requester_name||"")+"</div>"+
+      "<div style='background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px'><b>Reason:</b> "+esc(req.reason||"")+"</div>"+
+      "<div class='spacer'></div>";
+    var approve=document.createElement("button"); approve.className="btn small"; approve.style.background="var(--red)"; approve.textContent="✓ Approve & delete (password)";
+    approve.addEventListener("click",function(){ approveRequest(req); });
+    var reject=document.createElement("button"); reject.className="btn small grey"; reject.textContent="✕ Reject"; reject.style.marginLeft="8px";
+    reject.addEventListener("click",function(){ rejectRequest(req); });
+    row.appendChild(approve); row.appendChild(reject);
+    box.appendChild(row);
+  });
+}
+async function approveRequest(req){
+  var msg=$("reqScreenMsg"); msg.className="msg";
+  var pass=prompt("Approving will PERMANENTLY delete this report. Enter YOUR password to confirm:");
+  if(pass===null||pass==="") return;
+  msg.textContent="Verifying...";
+  var ok=await verifyPassword(pass);
+  if(!ok){ msg.className="msg err"; msg.textContent="Password incorrect — nothing deleted."; return; }
+  var err=await deleteVisit(req.visit_id);   // cascade removes the request row too
+  if(err){ msg.className="msg err"; msg.textContent="Delete failed: "+err; return; }
+  msg.className="msg ok"; msg.textContent="Report deleted.";
+  await refreshPending(); renderRequests(); renderLists();
+}
+async function rejectRequest(req){
+  var msg=$("reqScreenMsg"); msg.className="msg";
+  if(!confirm("Reject this deletion request? The report stays.")) return;
+  try{
+    var r=await sb.from(REQTABLE).update({status:"rejected", resolved_by:(me?me.id:null), resolved_at:new Date().toISOString()}).eq("id",req.id);
+    if(r.error) throw r.error;
+    msg.className="msg ok"; msg.textContent="Request rejected.";
+    await refreshPending(); renderRequests();
+  }catch(err){ msg.className="msg err"; msg.textContent="Couldn't reject: "+(err.message||err); }
+}
+
+$("btnDeleteReport").addEventListener("click", async function(){
+  if(!(isStaff()&&loggedIn())){ alert("Only admins/owner can delete reports."); return; }
+  var pass=prompt("Deleting is permanent. Enter YOUR account password to confirm:");
+  if(pass===null||pass==="") return;
+  $("barSub").textContent="· verifying...";
+  var ok=await verifyPassword(pass);
+  if(!ok){ $("barSub").textContent="· report"; alert("Password incorrect — nothing was deleted."); return; }
+  var id=current.id;
+  var err=await deleteVisit(id);
+  if(err){ alert("Delete failed: "+err); $("barSub").textContent="· report"; return; }
+  alert("Report deleted.");
+  renderLists(); $("barSub").textContent=""; show("homeView");
+});
+/* ============ Import Excel -> compiled report ============ */
+$("importXlsx").addEventListener("change",function(e){
+  var file=e.target.files[0]; if(!file) return;
+  if(!window.XLSX){ alert("Spreadsheet tool not loaded — please make sure you're online, then try again."); e.target.value=""; return; }
+  var isCsv=/\.csv$/i.test(file.name); var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var wb = isCsv ? XLSX.read(ev.target.result,{type:"string"}) : XLSX.read(new Uint8Array(ev.target.result),{type:"array"});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{defval:""});
+      if(!rows.length){ alert("No rows found in that file."); e.target.value=""; return; }
+      var w=window.open("","_blank");
+      if(!w){ alert("Please allow pop-ups for this site to open the report."); e.target.value=""; return; }
+      w.document.open(); w.document.write(compiledReportHTML(rows)); w.document.close();
+    }catch(err){ alert("Couldn't read the file: "+(err.message||err)); }
+    e.target.value="";
+  };
+  if(isCsv) reader.readAsText(file); else reader.readAsArrayBuffer(file);
+});
+function compiledReportHTML(rows){
+  function gv(r,keys){ for(var i=0;i<keys.length;i++){ var v=r[keys[i]]; if(v!==undefined&&v!=="") return (""+v); } return ""; }
+  function parseRow(r){ return {
+    inspector:gv(r,["Inspector"]), brand:gv(r,["Brand"]), city:gv(r,["City"]), outlet:gv(r,["Outlet"]),
+    date:gv(r,["Date of visit","Date"]), arrival:gv(r,["Arrival"]), departure:gv(r,["Departure"]), status:gv(r,["Status"]),
+    type:gv(r,["Type"]), category:gv(r,["Category"]), priority:gv(r,["Priority"]).toUpperCase()==="HIGH",
+    tracked:gv(r,["Tracked"]).toLowerCase()==="yes", resolved:gv(r,["Resolved"]).toLowerCase()==="yes",
+    menu:gv(r,["Menu"]), finding:gv(r,["Finding"]), solution:gv(r,["Suggested Solution"]),
+    dept:gv(r,["Dept","Finding dept","Departments (all)"]), photo:gv(r,["Photo"]) }; }
+  var pr=rows.map(parseRow);
+  var visits={}; pr.forEach(function(r){ var k=[r.brand,r.city,r.outlet,r.date,r.inspector,r.arrival].join("|"); if(!visits[k]) visits[k]={brand:r.brand,city:r.city,outlet:r.outlet,date:r.date,inspector:r.inspector,arrival:r.arrival,departure:r.departure,items:[]}; if(r.finding||r.menu) visits[k].items.push(r); });
+  var vlist=Object.keys(visits).map(function(k){return visits[k];});
+  var items=pr.filter(function(r){return r.finding||r.menu;});
+  var dates=items.map(function(r){return r.date;}).filter(Boolean).sort();
+  var highs=items.filter(function(r){return r.priority;});
+  var outs=items.filter(function(r){return r.tracked&&!r.resolved;});
+  var fnb=items.filter(function(r){return (r.type||"").toLowerCase().indexOf("beverage")>=0 || r.category;});
+  // per outlet
+  var byOutlet={}; items.forEach(function(r){ var o=r.outlet||"(no outlet)"; if(!byOutlet[o])byOutlet[o]={findings:0,high:0,visits:{}}; byOutlet[o].findings++; if(r.priority)byOutlet[o].high++; byOutlet[o].visits[r.date+"|"+r.inspector]=1; });
+  function photoCell(u){ var list=(""+(u||"")).split(/\r?\n/).map(function(x){return x.trim();}).filter(function(x){return /^https?:/i.test(x);}); return list.length? list.map(function(x){return "<a href='"+x+"' target='_blank'><img src='"+x+"' style='max-height:60px;max-width:90px;border-radius:4px;margin:2px'></a>";}).join("") : "—"; }
+  function itemsTable(list){
+    var body=list.map(function(r,i){
+      var isFnb=(r.type||"").toLowerCase().indexOf("beverage")>=0 || r.menu;
+      var label = isFnb ? "<b>"+esc(r.menu||"")+"</b>"+(r.category?" <span class='mut'>("+esc(r.category)+")</span>":"") : "";
+      var tag = r.priority? "<span class='hp'>⚠ HIGH</span> " : "";
+      var st = r.tracked? (r.resolved?"<span class='ok'>resolved</span>":"<span class='warn'>open</span>") : "";
+      var hl = r.priority? " style='background:#fef9c3'" : "";
+      return "<tr"+hl+"><td>"+(i+1)+"</td><td>"+tag+esc(r.dept||(isFnb?"F&B":""))+" "+st+"</td><td>"+label+(label?"<br>":"")+esc(r.finding||"").replace(/\r?\n/g,"<br>")+"</td><td>"+(r.solution?esc(r.solution).replace(/\r?\n/g,"<br>"):"—")+"</td><td class='ph'>"+photoCell(r.photo)+"</td></tr>";
+    }).join("");
+    if(!body) body="<tr><td colspan='5' class='mut'>No findings.</td></tr>";
+    return "<table><thead><tr><th>#</th><th>Dept / flags</th><th>Finding</th><th>Suggested Solution</th><th>Photo</th></tr></thead><tbody>"+body+"</tbody></table>";
+  }
+  // outlet -> visits (sorted)
+  var outletKeys=Object.keys(byOutlet).sort();
+  var details=outletKeys.map(function(o){
+    var vs=vlist.filter(function(v){return (v.outlet||"(no outlet)")===o;}).sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+    var blocks=vs.map(function(v){
+      return "<div class='visit'><div class='vh'><b>"+esc(v.brand)+"</b> — "+esc(v.outlet)+" ("+esc(v.city)+")<br>"+
+        "Inspector: "+esc(v.inspector||"—")+" · "+esc(v.date||"")+" · "+esc(v.arrival||"")+(v.departure?"–"+esc(v.departure):"")+"</div>"+itemsTable(v.items)+"</div>";
+    }).join("");
+    return "<div class='outlet'><h2>"+esc(o)+" <span class='mut'>("+byOutlet[o].findings+" findings"+(byOutlet[o].high?", "+byOutlet[o].high+" high-priority":"")+")</span></h2>"+blocks+"</div>";
+  }).join("");
+  var highList = highs.length? "<ul>"+highs.map(function(r){return "<li><b>"+esc(r.outlet)+"</b> ("+esc(r.date)+"): "+esc(r.finding||r.menu||"")+(r.tracked?(r.resolved?" — resolved":" — <b>still open</b>"):"")+"</li>";}).join("")+"</ul>" : "<p class='mut'>None.</p>";
+  var css="<style>@page{size:A4;margin:1.27cm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;margin:0;padding:16px;max-width:900px;margin:0 auto}h1{font-size:22px;border-bottom:3px solid #1f2937;padding-bottom:6px}h2{font-size:17px;margin-top:22px;border-bottom:1px solid #cbd2dc;padding-bottom:4px}.mut{color:#6b7280;font-weight:400;font-size:12px}.kpis{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.kpi{border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;min-width:110px}.kpi b{display:block;font-size:22px}table{width:100%;border-collapse:collapse;margin:8px 0 4px}th,td{border:1px solid #9aa2ad;padding:6px 8px;font-size:12.5px;text-align:left;vertical-align:top}th{background:#f1f5f9;text-align:center}.ph{width:100px;text-align:center}.hp{background:#fef08a;color:#854d0e;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px}.warn{background:#fee2e2;color:#991b1b;font-size:11px;padding:1px 6px;border-radius:5px}.ok{background:#dcfce7;color:#166534;font-size:11px;padding:1px 6px;border-radius:5px}.visit{margin:12px 0;border:1px solid #e5e7eb;border-radius:8px;padding:10px}.vh{font-size:13px;margin-bottom:6px}.outlet{page-break-inside:auto}.noprint{margin-bottom:14px}button{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:15px;cursor:pointer}@media print{.noprint{display:none}}</style>";
+  var range = dates.length? (dates[0]===dates[dates.length-1]?dates[0]:dates[0]+" to "+dates[dates.length-1]) : "—";
+  return "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Compiled Store Visit Report</title>"+css+"</head><body>"+
+    "<div class='noprint'><button onclick='window.print()'>Save as PDF / Print</button></div>"+
+    "<h1>COMPILED STORE VISIT REPORT</h1>"+
+    "<div class='mut'>Period: "+esc(range)+" · generated "+new Date().toISOString().slice(0,10)+"</div>"+
+    "<div class='kpis'>"+
+    "<div class='kpi'><b>"+vlist.length+"</b>Visits</div>"+
+    "<div class='kpi'><b>"+items.length+"</b>Findings</div>"+
+    "<div class='kpi'><b>"+highs.length+"</b>High priority</div>"+
+    "<div class='kpi'><b>"+outs.length+"</b>Open (tracked)</div>"+
+    "<div class='kpi'><b>"+fnb.length+"</b>Food &amp; Bev</div>"+
+    "<div class='kpi'><b>"+outletKeys.length+"</b>Outlets</div>"+
+    "</div>"+
+    "<h2>High-priority items</h2>"+highList+
+    "<h2>Details by outlet</h2>"+details+
+    "</body></html>";
+}
+function reportHTML(s){
+  ensureUids(s);
+  var timeLine=s.arrival+(s.departure?" – "+s.departure:" – (in progress)");
+  function head(depLabel){
+    return "<div class='rep-title'>STORE VISIT REPORT</div>"+
+      "<div class='rep-head'><b>Brand:</b> "+esc(s.brand)+" | <b>City:</b> "+esc(s.city)+" | <b>Outlet:</b> "+esc(s.outlet)+(inspectorsOf(s).length?" | <b>Inspector"+(inspectorsOf(s).length>1?"s":"")+":</b> "+esc(inspectorsOf(s).join(", ")):"")+"<br>"+
+      "<b>Date:</b> "+fmtDateLong(s.date)+" | <b>Time:</b> "+timeLine+" | <b>Department:</b> "+esc(depLabel)+"</div>";
+  }
+  function prow(f,i){var hl=f.priority?" style='background:#fef9c3'":"";return "<tr"+hl+"><td class='no'>"+(i+1)+"</td><td>"+(f.priority?"⚠️ ":"")+escNL(f.text||"(photo only)")+"</td><td>"+(f.solution?escNL(f.solution):"—")+"</td><td class='ph'>"+photoImgs(f)+"</td></tr>";}
+  function table(items){
+    var rows=items.map(prow).join("");
+    if(!rows)rows="<tr><td class='no'>—</td><td>No findings recorded.</td><td>—</td><td class='ph'>—</td></tr>";
+    return "<table class='rep'><thead><tr><th>No.</th><th>Finding</th><th>Suggested Solution</th><th>Photo</th></tr></thead><tbody>"+rows+"</tbody></table>";
+  }
+  function fnbTable(items){
+    var ORDER=["Beverage","Food","Pastry"];
+    var groups={}; items.forEach(function(f){var k=f.category||"Other"; (groups[k]=groups[k]||[]).push(f);});
+    var keys=ORDER.filter(function(k){return groups[k];}).concat(Object.keys(groups).filter(function(k){return ORDER.indexOf(k)<0;}));
+    var rows="";
+    keys.forEach(function(k){
+      rows+="<tr><td colspan='5' style='background:#fce7f3;color:#9d174d;font-weight:700'>"+esc(k)+"</td></tr>";
+      orderByGroup(groups[k], "FNB:"+k, s).forEach(function(f,i){ rows+="<tr><td class='no'>"+(i+1)+"</td><td><b>"+esc(f.menuName||"")+"</b></td><td>"+escNL(f.text||"")+"</td><td>"+(f.solution?escNL(f.solution):"—")+"</td><td class='ph'>"+photoImgs(f)+"</td></tr>"; });
+    });
+    return "<table class='rep'><thead><tr><th>No.</th><th>Menu</th><th>Finding</th><th>Suggested Solution</th><th>Photo</th></tr></thead><tbody>"+rows+"</tbody></table>";
+  }
+  function isIssue(f){return f.kind!=="fnb";}
+  function isResp(f){return !!f.issueId;}
+  function visitsOf(f){var h=f.history||[];return {total:h.length+1, mine:h.filter(function(e){return e.by===s.user_id;}).length+1};}
+  function escalated(f){ if(!f.priority||f.resolved) return false; var v=visitsOf(f); return (loggedIn()&&isStaff())? v.total>=5 : v.mine>=3; }
+  function escPage(f){
+    var first=(f.history&&f.history.length)?f.history[0]:{date:f.firstDate,name:f.firstName,note:f.text};
+    var rows=(f.history||[]).concat([{date:s.date,name:s.inspector,note:f.text,photo:f.photo,solution:f.solution}]);
+    var tr=rows.map(function(e,i){return "<tr><td class='no'>"+(i+1)+"</td><td>"+esc(fmtDateLong(e.date))+"</td><td>"+esc(e.name||"")+"</td><td>"+escNL(e.note||"")+(e.solution?"<br><span class='muted'>Sol: "+escNL(e.solution)+"</span>":"")+"</td><td class='ph'>"+(e.photo?"<img src='"+e.photo+"'>":"—")+"</td></tr>";}).join("");
+    return "<div class='rep-title' style='color:#b91c1c;border-color:#b91c1c'>ESCALATED ISSUE — HIGH PRIORITY</div>"+
+      "<div class='rep-head'><b>Outlet:</b> "+esc(s.outlet)+" ("+esc(s.city)+") &nbsp;|&nbsp; <b>Brand:</b> "+esc(s.brand)+"<br>"+
+      "<b>Issue:</b> "+esc(first.note||"")+"<br><b>Department:</b> "+((f.depts||[]).join(", ")||"—")+"<br>"+
+      "<b>First reported:</b> "+esc(fmtDateLong(first.date))+" by "+esc(first.name||"")+" &nbsp;·&nbsp; still unresolved after "+visitsOf(f).total+" visit(s)</div>"+
+      "<table class='rep'><thead><tr><th>#</th><th>Visit date</th><th>By</th><th>Condition / note</th><th>Photo</th></tr></thead><tbody>"+tr+"</tbody></table>";
+  }
+  // Header without the "Department:" line (used on the summary / high-priority pages).
+  function headNoDept(){
+    return "<div class='rep-title'>STORE VISIT REPORT</div>"+
+      "<div class='rep-head'><b>Brand:</b> "+esc(s.brand)+" | <b>City:</b> "+esc(s.city)+" | <b>Outlet:</b> "+esc(s.outlet)+(inspectorsOf(s).length?" | <b>Inspector"+(inspectorsOf(s).length>1?"s":"")+":</b> "+esc(inspectorsOf(s).join(", ")):"")+"<br>"+
+      "<b>Date:</b> "+fmtDateLong(s.date)+" | <b>Time:</b> "+timeLine+"</div>";
+  }
+  // Summary scoring table (only if any scoring answered). Columns = departments present.
+  function scoreSummaryTable(sc){
+    if(!sc || !sc.answered) return "";
+    var dmap={}; sc.cats.forEach(function(c){ if(c.poss>0){ var d=dmap[c.dept]||(dmap[c.dept]={e:0,p:0}); d.e+=c.earned; d.p+=c.poss; } });
+    var cols=REAL_DEPTS.filter(function(d){return dmap[d];});
+    Object.keys(dmap).forEach(function(d){ if(cols.indexOf(d)<0) cols.push(d); });
+    if(!cols.length) return "";
+    var ds=function(d){ var x=dmap[d]; return (x&&x.p>0)?clampScore(Math.round(x.e/x.p*100)):null; };
+    var head="<tr><td class='rl'>DEPARTMENT</td>"+cols.map(function(d){return "<td class='dc'>"+esc(d)+"</td>";}).join("")+"</tr>";
+    var sr="<tr><td class='rl'>SCORE</td>"+cols.map(function(d){var v=ds(d);return "<td class='sc'>"+(v==null?"—":v)+"</td>";}).join("")+"</tr>";
+    var gr="<tr><td class='rl'>GRADE</td>"+cols.map(function(d){return "<td class='sc'>"+gradeOf(ds(d))+"</td>";}).join("")+"</tr>";
+    var span=cols.length+1;
+    return "<table class='sumtab'><tr class='sum-banner'><td colspan='"+span+"'>SUMMARY</td></tr>"+head+sr+gr+"</table>"+
+      "<div class='final-score'><div><span class='fs-l'>FINAL OUTLET SCORE</span><span class='fs-n'>"+(sc.overall==null?"—":sc.overall)+"</span></div>"+
+      "<div><span class='fs-l'>FINAL GRADE</span><span class='fs-g'>"+gradeOf(sc.overall)+"</span></div></div>";
+  }
+  // Detailed questionnaire pages (one per department that has answers).
+  function detailAnswer(a){ return a==="ya"?"Ya":a==="tidak"?"Tidak":a==="na"?"Tidak dinilai (not applicable)":a==="repeat"?"Repeat":"—"; }
+  function deptDetailPages(sc){
+    var sv=(s.scores)||{}, nv=(s.scoreNotes)||{}, out=[];
+    var byDept={}, order=[]; SCORE_GROUPS.forEach(function(g){ if(!byDept[g.dept]){byDept[g.dept]=[];order.push(g.dept);} byDept[g.dept].push(g); });
+    var dmap={}; sc.cats.forEach(function(c){ if(c.poss>0){ var d=dmap[c.dept]||(dmap[c.dept]={e:0,p:0}); d.e+=c.earned; d.p+=c.poss; } });
+    order.forEach(function(dept){
+      var anyAns=byDept[dept].some(function(g){return g.items.some(function(it){return sv[it.key];});});
+      if(!anyAns) return;
+      var x=dmap[dept], ds=(x&&x.p>0)?clampScore(Math.round(x.e/x.p*100)):null;
+      var rows="";
+      byDept[dept].forEach(function(g){
+        var trs="";
+        g.items.forEach(function(it,ii){
+          trs+="<tr>"+(ii===0?"<td class='dcat' rowspan='"+g.items.length+"'>"+esc(g.cat)+"</td>":"")+
+            "<td>"+esc(it.q)+"</td><td class='dans'>"+detailAnswer(sv[it.key])+"</td><td class='dnote'>"+(nv[it.key]?esc(nv[it.key]):"")+"</td></tr>";
+        });
+        rows+="<tbody>"+trs+"</tbody>";   // one tbody per category -> kept together across page breaks
+      });
+      out.push(
+        "<table class='dept-head-tab'><tr><td class='dh-l'>DEPARTMENT</td><td class='dh-v'>"+esc(dept)+"</td></tr>"+
+        "<tr><td class='dh-l'>Total Score</td><td class='dh-s'>"+(ds==null?"—":ds+" ("+gradeOf(ds)+")")+"</td></tr></table>"+
+        "<table class='rep detail'><colgroup><col class='c-cat'><col class='c-q'><col class='c-a'><col class='c-n'></colgroup><thead><tr><th>CATEGORY</th><th>QUESTION</th><th>ANSWER</th><th>NOTES</th></tr></thead>"+rows+"</table>"
+      );
+    });
+    return out;
+  }
+  // Consolidated High-priority unresolved page (page 2).
+  function hpIssueBlock(f){
+    var first=(f.history&&f.history.length)?f.history[0]:{date:f.firstDate,name:f.firstName,note:f.text};
+    var rows=(f.history||[]).concat([{date:s.date,name:s.inspector,note:f.text,photo:f.photo,solution:f.solution}]);
+    var tr=rows.map(function(e,i){return "<tr><td class='no'>"+(i+1)+"</td><td>"+esc(fmtDateLong(e.date))+"</td><td>"+esc(e.name||"")+"</td><td>"+escNL(e.note||"")+(e.solution?"<br><span class='muted'>Sol: "+escNL(e.solution)+"</span>":"")+"</td><td class='ph'>"+(e.photo?"<img src='"+e.photo+"'>":"—")+"</td></tr>";}).join("");
+    return "<div class='hp-issue'><div class='hp-issue-h'>⚠️ <b>"+esc(first.note||f.text||"")+"</b> <span class='muted'>· "+((f.depts||[]).join(", ")||"—")+" · first reported "+esc(fmtDateLong(first.date))+" by "+esc(first.name||"")+" · still unresolved after "+visitsOf(f).total+" visit(s)</span></div>"+
+      "<table class='rep'><thead><tr><th>#</th><th>Visit date</th><th>By</th><th>Condition / note</th><th>Photo</th></tr></thead><tbody>"+tr+"</tbody></table></div>";
+  }
+  function hpPage(list){
+    return "<div class='rep-title' style='color:#b91c1c;border-color:#b91c1c'>HIGH PRIORITY — UNRESOLVED ISSUES</div>"+
+      "<div class='rep-head'><b>Outlet:</b> "+esc(s.outlet)+" ("+esc(s.city)+") &nbsp;|&nbsp; <b>Brand:</b> "+esc(s.brand)+"</div>"+
+      list.map(hpIssueBlock).join("");
+  }
+
+  // Recurring checklist offences: questionnaire items still "Tidak" that were also
+  // "Tidak" on consecutive previous visits to the SAME outlet. Count = how many
+  // consecutive prior visits it stayed "Tidak" (1× repeat = failed last visit too).
+  function questionnaireRepeats(){
+    var sv=(s.scores)||{}; if(!sv || !Object.keys(sv).length) return [];
+    var priors=(typeof sessions!=="undefined"?sessions:[]).filter(function(x){
+      return x && x.id!==s.id && x.status==="done" && x.scores && x.brand===s.brand && x.city===s.city && x.outlet===s.outlet && (x.date||"") < (s.date||"￿");
+    }).sort(function(a,b){ return (b.date||"").localeCompare(a.date||"") || (b.updated||0)-(a.updated||0); });
+    var byDept={}, order=[];
+    SCORE_GROUPS.forEach(function(g){ g.items.forEach(function(it){
+      if(sv[it.key]!=="tidak") return;
+      var count=0;
+      for(var k=0;k<priors.length;k++){ var pv=(priors[k].scores||{})[it.key]; if(pv==="tidak"){count++;} else { break; } }
+      if(count>0){ if(!byDept[g.dept]){byDept[g.dept]=[];order.push(g.dept);} byDept[g.dept].push({q:it.q,count:count}); }
+    });});
+    return order.map(function(d){return {dept:d,items:byDept[d]};});
+  }
+  function repeatSection(){
+    var groups=questionnaireRepeats(); if(!groups.length) return "";
+    return "<div class='mut-h' style='color:#b45309;margin-top:16px'>RECURRING AUDIT ISSUES <span style='font-weight:400;color:#9ca3af'>— checklist items still failing from previous visits</span></div>"+
+      groups.map(function(g){
+        return "<div class='rec-dept'><div class='rec-d'>"+esc(g.dept)+"</div><ul class='rec-list'>"+
+          g.items.map(function(it){return "<li>"+esc(it.q)+" <span class='rec-n'>("+it.count+"× repeat)</span></li>";}).join("")+"</ul></div>";
+      }).join("");
+  }
+
+  var sc=computeScores(s);
+  var done=(s.status==="done");   // scoring/grading only shown on the FINAL report, not in preview
+  var skipped=!!s.scoreSkipped;
+  var scoreBlock = (done && !skipped) ? scoreSummaryTable(sc)
+                 : (done && skipped) ? "<div class='mut-h p1sum'>QUESTIONNAIRE</div><div class='sum-body p1sum'><span class='muted'>Questionnaire not completed.</span></div>"
+                 : "";
+  var pages=[];
+  // ---- PAGE 1: header + summary scoring table + Summary/foreword + recurring offences ----
+  pages.push( headNoDept() + scoreBlock +
+    "<div class='mut-h p1sum'>SUMMARY</div><div class='sum-body p1sum'>"+(s.summary?escNL(s.summary):"<span class='muted'>—</span>")+"</div>" +
+    ((done&&!skipped)?repeatSection():"") );
+  // ---- PAGE 2: high-priority unresolved issues (only if any) ----
+  var hp=(s.findings||[]).filter(function(f){return isIssue(f)&&isResp(f)&&escalated(f);});
+  if(hp.length){ pages.push(hpPage(hp)); }
+  // ---- Department findings pages ----
+  REAL_DEPTS.concat(["__none__"]).forEach(function(dep){
+    var inDept=function(f){ return dep==="__none__" ? expandDepts(f.depts).length===0 : expandDepts(f.depts).indexOf(dep)>=0; };
+    // One continuous table per department: priority entries first, then the rest
+    // continue the same numbering (single header, repeats only on a page break).
+    var items=orderByGroup((s.findings||[]).filter(function(f){return isIssue(f)&&inDept(f);}), dep, s);
+    if(!items.length) return;
+    var body=head(dep==="__none__"?"General (no department)":dep)+table(items);
+    pages.push(body);
+  });
+  // ---- Food & Beverage page ----
+  var FNB_RANK={Beverage:0,Food:1,Pastry:2};
+  var fnb=(s.findings||[]).filter(function(f){return f.kind==="fnb";}).map(function(f,i){return {f:f,i:i};}).sort(function(a,b){var ra=(FNB_RANK[a.f.category]==null?9:FNB_RANK[a.f.category]), rb=(FNB_RANK[b.f.category]==null?9:FNB_RANK[b.f.category]); return ra!==rb?ra-rb:a.i-b.i;}).map(function(o){return o.f;});
+  if(fnb.length){ pages.push(head("Food & Beverage")+fnbTable(fnb)); }
+  // ---- Detailed questionnaire pages (after F&B) — final report only ----
+  if(done && !skipped && sc.answered>0){ deptDetailPages(sc).forEach(function(p){ pages.push(p); }); }
+  return pages.map(function(h,idx){ return "<div class='report-page'"+(idx>0?" style='page-break-before:always'":"")+">"+h+"</div>"; }).join("");
+}
+function scorePage(s,c){
+  var rows="", curDept="";
+  c.cats.forEach(function(cat){
+    if(cat.answered===0 && cat.poss===0) return; // skip untouched non-scored categories
+    if(cat.dept!==curDept){ curDept=cat.dept; rows+="<tr><td colspan='3' style='background:#eef2f7;font-weight:700'>"+esc(cat.dept)+"</td></tr>"; }
+    rows+="<tr><td>"+esc(cat.cat)+"</td><td style='text-align:center'>"+cat.answered+"/"+cat.total+"</td><td style='text-align:center;font-weight:700'>"+(cat.score==null?"—":cat.score)+"</td></tr>";
+  });
+  if(!rows) rows="<tr><td colspan='3' class='muted'>No categories scored.</td></tr>";
+  return "<div class='rep-title'>AUDIT SCORE</div>"+
+    "<div class='rep-head'><b>Brand:</b> "+esc(s.brand)+" | <b>City:</b> "+esc(s.city)+" | <b>Outlet:</b> "+esc(s.outlet)+(inspectorsOf(s).length?" | <b>Inspector"+(inspectorsOf(s).length>1?"s":"")+":</b> "+esc(inspectorsOf(s).join(", ")):"")+"<br><b>Date:</b> "+fmtDateLong(s.date)+"</div>"+
+    "<div style='margin:12px 0;font-size:15px'><b>Overall outlet score:</b> <span style='font-size:26px;font-weight:800'>"+(c.overall==null?"—":c.overall)+"</span> <span class='muted'>/ 100 · "+c.answered+" of "+c.total+" items answered</span></div>"+
+    "<table class='rep'><thead><tr><th>Category</th><th style='width:70px;text-align:center'>Answered</th><th style='width:60px;text-align:center'>Score</th></tr></thead><tbody>"+rows+"</tbody></table>";
+}
+function deptInline(f){var d=(f.depts||[]);return d.length?" <span class='muted'>["+d.join(", ")+"]</span>":"";}
+$("btnPrint").addEventListener("click",function(){window.print();});
+$("btnReportBack").addEventListener("click",function(){if(current&&current.status==="open"){openVisit(current);}else{renderLists();$("barSub").textContent="";show("homeView");}});
+$("btnCopy").addEventListener("click",function(){
+  var s=current, lines=[];
+  function block(dep, items){
+    lines.push("Brand: "+s.brand+" | City: "+s.city+" | Outlet: "+s.outlet);
+    if(s.inspector) lines.push("Inspector: "+s.inspector);
+    lines.push("Date of visit: "+fmtDateLong(s.date));
+    lines.push("Time: "+s.arrival+(s.departure?" - "+s.departure:" - (in progress)"));
+    lines.push("Department: "+dep); lines.push("");
+    if(!items.length) lines.push("(no findings)");
+    items.forEach(function(f,i){ lines.push((i+1)+". "+(f.text||"(photo only)")+(f.photo?" [photo]":"")); if(f.solution) lines.push("   → Solution: "+f.solution); });
+  }
+  var pages=[];
+  REAL_DEPTS.forEach(function(dep){ var items=(s.findings||[]).filter(function(f){return expandDepts(f.depts).indexOf(dep)>=0;}); if(items.length) pages.push([dep,items]); });
+  var none=(s.findings||[]).filter(function(f){return expandDepts(f.depts).length===0;});
+  if(none.length) pages.push(["General (no department)", none]);
+  if(!pages.length) pages.push([(unionDepts(s).join(" / ")||"—"), []]);
+  pages.forEach(function(p,idx){ if(idx>0){ lines.push(""); lines.push("----------------------------------------"); lines.push(""); } block(p[0],p[1]); });
+  var txt=lines.join("\n");
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){alert("Report text copied.");},function(){prompt("Copy the report text:",txt);});}else prompt("Copy the report text:",txt);
+});
+
+/* ============ Cloud sync button ============ */
+$("btnCloudSync").addEventListener("click",async function(){
+  if(!cloudConfigured()){openSettings();return;}
+  if(!loggedIn()){show("loginView");renderAuthMode();return;}
+  var t=$("authBarText");t.textContent="☁ Syncing...";
+  await loadProfile();               // refresh my role (e.g. if owner just promoted me)
+  await loadConfigFromCloud();
+  await syncAllUnsynced();           // push any device-only visits up to the cloud first
+  var r=await pullVisits();renderLists();await refreshPending();
+  if(r.error)t.textContent="⚠ Sync error: "+r.error; else updateAuthBar(r.changed);
+});
+function updateAuthBar(changed){
+  updateSetupBtn();
+  var t=$("authBarText");
+  if(loggedIn()){
+    var roleTxt=me.role.charAt(0).toUpperCase()+me.role.slice(1);
+    t.innerHTML="Signed in: <b>"+esc(me.name||me.email)+"</b> ("+roleTxt+")"+(changed!=null?" · "+changed+" update(s) loaded":"")+" &nbsp;<a href='#' id='lnkSignout'>Sign out</a>"+(isOwner()?" &nbsp;<a href='#' id='lnkTeam'>Manage team</a>":"");
+    $("authBar").className="authbar";
+    var so=$("lnkSignout"); if(so) so.addEventListener("click",function(e){e.preventDefault();doSignOut();});
+    var tm=$("lnkTeam"); if(tm) tm.addEventListener("click",function(e){e.preventDefault();openTeam();});
+  } else if(cloudConfigured()){
+    t.innerHTML="Cloud on but not signed in. &nbsp;<a href='#' id='lnkSignin'>Sign in</a>"; $("authBar").className="authbar";
+    var si=$("lnkSignin"); if(si) si.addEventListener("click",function(e){e.preventDefault();show("loginView");renderAuthMode();});
+  } else { t.textContent="Working on this device only. Open ⚙ Setup to enable cloud + login."; $("authBar").className="authbar"; }
+}
+
+/* ============ Team (owner) ============ */
+async function openTeam(){
+  $("barSub").textContent="· team"; show("teamView");
+  await renderTeam();
+}
+$("btnTeamRefresh").addEventListener("click",renderTeam);
+$("btnTeamBack").addEventListener("click",function(){initHome();});
+async function renderTeam(){
+  var box=$("teamList"), msg=$("teamMsg"); msg.textContent=""; box.innerHTML="Loading...";
+  if(!loggedIn()){box.innerHTML="Sign in first.";return;}
+  var r=await sb.from("profiles").select("id,email,name,role").order("created_at",{ascending:true});
+  if(r.error){box.innerHTML="";msg.className="msg err";msg.textContent=r.error.message;return;}
+  box.innerHTML="";
+  (r.data||[]).forEach(function(p){
+    var row=document.createElement("div");row.className="teamrow";
+    var isMe=(me&&p.id===me.id);
+    row.innerHTML="<div class='info'><b class='tn'>"+esc(p.name||"(no name)")+"</b>"+(isMe?" <span class='muted'>(you)</span>":"")+"<br><span class='muted'>"+esc(p.email||"")+"</span></div>";
+    // Owner can set/fix a member's name (needed for people who signed up before names were required).
+    var nameWrap=document.createElement("div"); nameWrap.style.cssText="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap";
+    var ni=document.createElement("input"); ni.type="text"; ni.value=p.name||""; ni.placeholder="Full name (First [Middle] Last)"; ni.style.cssText="flex:1;min-width:150px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:13px";
+    var nb=document.createElement("button"); nb.type="button"; nb.className="btn small proceed"; nb.style.width="auto"; nb.textContent="Save name";
+    nb.addEventListener("click",async function(){ var nm=ni.value.trim(); if(!nm){msg.className="msg err";msg.textContent="Enter a name.";return;} msg.textContent="Saving...";msg.className="msg"; var u=await sb.from("profiles").update({name:nm}).eq("id",p.id); if(u.error){msg.className="msg err";msg.textContent=u.error.message;} else { p.name=nm; row.querySelector(".tn").textContent=nm; if(isMe){me.name=nm;inspector=firstNameOf(nm);save(LS.insp,inspector);} msg.className="msg ok";msg.textContent="Saved name: "+nm; } });
+    nameWrap.appendChild(ni); nameWrap.appendChild(nb); row.appendChild(nameWrap);
+    var sel=document.createElement("select");
+    ["member","admin","owner"].forEach(function(role){var o=document.createElement("option");o.value=role;o.textContent=role;if(p.role===role)o.selected=true;sel.appendChild(o);});
+    sel.addEventListener("change",async function(){
+      msg.textContent="Saving...";msg.className="msg";
+      var u=await sb.from("profiles").update({role:sel.value}).eq("id",p.id);
+      if(u.error){msg.className="msg err";msg.textContent=u.error.message; sel.value=p.role;}
+      else{p.role=sel.value;msg.className="msg ok";msg.textContent="Updated "+esc(p.name||p.email)+" → "+sel.value;}
+    });
+    row.appendChild(sel);
+    // Owner marks who may skip the questionnaire without a password.
+    var exWrap=document.createElement("label"); exWrap.style.cssText="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px";
+    var ex=document.createElement("input"); ex.type="checkbox"; ex.style.width="auto"; ex.checked=isQExempt(p.id);
+    ex.addEventListener("change",async function(){ if(ex.checked){ if(qexempt.indexOf(p.id)<0) qexempt.push(p.id); } else { qexempt=qexempt.filter(function(x){return x!==p.id;}); } msg.className="msg"; msg.textContent="Saving..."; await pushQExempt(); msg.className="msg ok"; msg.textContent=(ex.checked?"Exempted ":"Un-exempted ")+esc(p.name||p.email)+" from the questionnaire."; });
+    exWrap.appendChild(ex); exWrap.appendChild(document.createTextNode("Questionnaire optional (can skip without password)"));
+    row.appendChild(exWrap);
+    box.appendChild(row);
+  });
+  if(!(r.data||[]).length) box.innerHTML="<p class='muted'>No team members yet.</p>";
+}
+
+/* ============ Settings ============ */
+$("btnSettings").addEventListener("click",openSettings);
+function openSettings(){$("sbUrl").value=sbUrl||"";$("sbKey").value=sbKey||"";renderBrandTree();$("barSub").textContent="· setup";show("settingsView");}
+$("btnSettingsBack").addEventListener("click",function(){ boot(); });
+$("sbUrl").addEventListener("change",function(){sbUrl=$("sbUrl").value.trim().replace(/\/+$/,"");save(LS.sbUrl,sbUrl);initSupabase();});
+$("sbKey").addEventListener("change",function(){sbKey=$("sbKey").value.trim();save(LS.sbKey,sbKey);initSupabase();});
+$("btnTestSync").addEventListener("click",async function(){sbUrl=$("sbUrl").value.trim().replace(/\/+$/,"");sbKey=$("sbKey").value.trim();save(LS.sbUrl,sbUrl);save(LS.sbKey,sbKey);initSupabase();var r=$("testResult");if(!sb){r.textContent=(window.supabase?"Enter URL and key.":"Library not loaded — are you online?");return;}r.textContent="Testing...";try{var res=await sb.auth.getSession();r.textContent="✓ Connected!";$("btnGoLogin").classList.remove("hide");}catch(err){r.textContent="⚠ "+(err.message||err);$("btnGoLogin").classList.add("hide");}});
+$("btnGoLogin").addEventListener("click",function(){ boot(); });
+
+$("addBrand").addEventListener("click",function(){var n=$("newBrand").value.trim();if(!n)return;if(cfg.brands.some(function(b){return b.name.toLowerCase()===n.toLowerCase();})){alert("Brand exists.");return;}cfg.brands.push({name:n,cities:[]});$("newBrand").value="";save(LS.cfg,cfg);pushConfig();renderBrandTree();fillBrands();});
+function renderBrandTree(){var root=$("brandTree");root.innerHTML="";cfg.brands.forEach(function(b,bi){var box=document.createElement("div");box.className="card";box.style.padding="12px";box.style.margin="0 0 10px";box.innerHTML="<div class='mgmt-row'><b class='n'>🏷 "+esc(b.name)+"</b><button class='del' data-b='"+bi+"' data-act='delB'>delete brand</button></div>";b.cities.forEach(function(c,ci){var cd=document.createElement("div");cd.style.margin="6px 0 6px 10px";cd.innerHTML="<div class='mgmt-row'><span class='n'>📍 "+esc(c.name)+"</span><button class='del' data-b='"+bi+"' data-c='"+ci+"' data-act='delC'>delete city</button></div>";c.outlets.forEach(function(o,oi){var od=document.createElement("div");od.style.margin="2px 0 2px 20px";od.className="mgmt-row";od.innerHTML="<span class='n muted'>🏬 "+esc(o)+"</span><button class='del' data-b='"+bi+"' data-c='"+ci+"' data-o='"+oi+"' data-act='delO'>remove</button>";cd.appendChild(od);});var addO=document.createElement("div");addO.className="mgmt-row";addO.style.marginLeft="20px";addO.innerHTML="<input type='text' class='n' placeholder='add outlet in "+esc(c.name)+"'><button class='btn small' data-b='"+bi+"' data-c='"+ci+"' data-act='addO'>Add</button>";cd.appendChild(addO);box.appendChild(cd);});var addC=document.createElement("div");addC.className="mgmt-row";addC.style.marginLeft="10px";addC.innerHTML="<input type='text' class='n' placeholder='add city in "+esc(b.name)+"'><button class='btn small' data-b='"+bi+"' data-act='addC'>Add</button>";box.appendChild(addC);root.appendChild(box);});root.querySelectorAll("[data-act]").forEach(function(btn){btn.addEventListener("click",function(){var bi=+btn.getAttribute("data-b"),ci=+btn.getAttribute("data-c"),oi=+btn.getAttribute("data-o"),act=btn.getAttribute("data-act");if(act==="delB"){if(confirm("Delete brand and all its cities/outlets?"))cfg.brands.splice(bi,1);}else if(act==="delC"){if(confirm("Delete this city?"))cfg.brands[bi].cities.splice(ci,1);}else if(act==="delO"){cfg.brands[bi].cities[ci].outlets.splice(oi,1);}else if(act==="addC"){var v=btn.previousElementSibling.value.trim();if(!v)return;cfg.brands[bi].cities.push({name:v,outlets:[]});}else if(act==="addO"){var v2=btn.previousElementSibling.value.trim();if(!v2)return;cfg.brands[bi].cities[ci].outlets.push(v2);}save(LS.cfg,cfg);pushConfig();renderBrandTree();fillBrands();fillCities();});});}
+
+$("btnExport").addEventListener("click",function(){var data={config:cfg,sessions:sessions,exportedAt:new Date().toISOString()};var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="store-visit-backup-"+todayISO()+".json";a.click();});
+$("mergeFile").addEventListener("change",function(e){var file=e.target.files[0];if(!file)return;var r=new FileReader();r.onload=function(ev){try{var data=JSON.parse(ev.target.result),incoming=data.sessions||[];var have={};sessions.forEach(function(s){have[s.id]=1;});var added=0,updated=0;incoming.forEach(function(s){if(have[s.id]){var idx=sessions.findIndex(function(x){return x.id===s.id;});if((s.updated||0)>(sessions[idx].updated||0)){sessions[idx]=s;updated++;}}else{sessions.push(s);added++;}});persist();renderLists();alert("Merged: "+added+" new, "+updated+" updated.");}catch(err){alert("Invalid file.");}e.target.value="";};r.readAsText(file);});
+$("importFile").addEventListener("change",function(e){var file=e.target.files[0];if(!file)return;if(!confirm("RESTORE will REPLACE all data on this device. Continue?")){e.target.value="";return;}var r=new FileReader();r.onload=function(ev){try{var data=JSON.parse(ev.target.result);if(data.config){cfg=data.config;save(LS.cfg,cfg);}if(data.sessions){sessions=data.sessions;save(LS.sessions,sessions);}alert("Backup restored.");openSettings();}catch(err){alert("Invalid backup file.");}};r.readAsText(file);});
+
+/* ============ init ============ */
+async function initHome(){
+  document.title="Store Visit Report";
+  fillBrands();fillCities();fillOutlets();
+  var loginMode = loggedIn();
+  $("inspRow").style.display = loginMode?"none":"block";
+  if(loginMode){ inspector=firstNameOf(me.name)||me.email; save(LS.insp,inspector); } else { $("inpInspector").value=inspector||""; }
+  if(!$("inpDate").value)$("inpDate").value=todayISO();
+  if(!$("inpArrival").value)$("inpArrival").value=nowHM();
+  renderLists();checkExisting();updateAuthBar(null);updateSetupBtn();$("barSub").textContent="";show("homeView");
+  $("btnRequestsBanner").classList.add("hide");
+  if(loggedIn()){var t=$("authBarText");t.innerHTML="☁ Loading...";await loadConfigFromCloud();var r=await pullVisits();renderLists();await refreshPending();updateAuthBar(r.changed);}
+}
+async function boot(){
+  initSupabase();
+  if(cloudConfigured()){
+    if(!window.supabase){ // offline / lib missing but cloud configured
+      if(me){ await initHome(); } else { show("loginView"); renderAuthMode(); }
+      return;
+    }
+    await loadProfile();
+    if(me){ await initHome(); } else { show("loginView"); renderAuthMode(); }
+  } else {
+    me=null; await initHome();
+  }
+}
+window.addEventListener("load", boot);
+boot();
+</script>
+</body>
+</html>
