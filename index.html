@@ -105,6 +105,15 @@
   .lockbanner{background:#e0f2fe;border:1px solid #7dd3fc;color:#075985;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;margin:0 0 10px}
   .btnrow3{display:flex;gap:8px;flex-wrap:wrap}
   .btnrow3 .btn{flex:1 1 30%;min-width:120px}
+  .btnrow2{display:flex;gap:8px}
+  .btnrow2 .btn{flex:1}
+  .finding .body.tap{cursor:pointer}
+  .teamtab{border-collapse:collapse;width:100%;font-size:13px;min-width:680px}
+  .teamtab th,.teamtab td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
+  .teamtab th{background:#3b2314;color:#fff;font-weight:700;white-space:nowrap;font-size:12px}
+  .teamtab td .tcell-in{width:100%;padding:5px 6px;border:1px solid var(--line);border-radius:6px;font-size:13px;box-sizing:border-box}
+  .teamtab .uname{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  .teamtab td input[type=checkbox]{width:auto}
   .thumbrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
   .thumbrow .t{position:relative}
   .thumbrow .t img{width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
@@ -209,9 +218,10 @@
         <div class="row"><label>Middle name <span class="muted" style="font-weight:400">(optional)</span></label><input type="text" id="authMiddle"></div>
         <div class="row"><label>Last name <span style="color:var(--red)">*</span></label><input type="text" id="authLast"></div>
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:8px"><input type="checkbox" id="authNoLast" style="width:auto"> I don't have a last name</label>
-        <small class="hint">Only your <b>first name</b> is shown as the inspector on reports.</small>
+        <small class="hint">Only your <b>first name</b> is shown as the inspector on reports. Your username is generated automatically.</small>
       </div>
-      <div class="row"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="username"></div>
+      <div class="row" id="userRow"><label>Username</label><input type="text" id="authUser" placeholder="e.g. hg26wan0734" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="row" id="emailRow"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email"></div>
       <div class="row"><label>Password</label><input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password"></div>
       <button class="btn proceed" id="btnAuthGo">Sign in</button>
       <div class="msg" id="authMsg"></div>
@@ -341,16 +351,17 @@
     </div>
     <div class="card noprint" style="margin-top:16px">
       <div class="row" style="margin-bottom:14px" id="summaryEditRow">
-        <label for="reportSummary"><b>Summary / foreword</b></label>
+        <label for="reportSummary"><b>Summary</b></label>
         <textarea id="reportSummary" rows="4" placeholder="Write a short summary or foreword for this visit. Press Enter for new lines; * at the start of a line becomes a bullet."></textarea>
         <small class="hint" id="summaryHint">Saved automatically when you click away.</small>
       </div>
       <div id="reportActionsDone">
         <div class="btnrow3">
           <button class="btn proceed" id="btnPrint">Save as PDF / Print</button>
-          <button class="btn brown hide" id="btnEditReport">Edit report (fix wording / remove entries)</button>
+          <button class="btn add hide" id="btnEditReport">+ Add more entries</button>
           <button class="btn back" id="btnReportBack">← Back</button>
         </div>
+        <button class="btn brown hide" id="btnEditEntriesDone" style="width:100%;margin-top:10px">✎ Edit entries</button>
         <button class="btn ghost hide" id="btnCopy">Copy report text</button>
         <button class="btn cancel hide" id="btnDeleteReport" style="width:100%;margin-top:10px">Delete this report (admin — password required)</button>
         <button class="btn cancel hide" id="btnRequestDelete" style="width:100%;margin-top:10px">Request deletion (needs admin approval)</button>
@@ -362,7 +373,47 @@
           <button class="btn add" id="btnPvAdd">+ Add more entries</button>
           <button class="btn proceed" id="btnPvDone">Proceed to questionnaire →</button>
         </div>
+        <button class="btn brown" id="btnEditEntries" style="width:100%;margin-top:10px">✎ Edit entries</button>
         <button class="btn cancel" id="btnPvCancel" style="width:100%;margin-top:10px">Cancel visit (discard &amp; remove)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EDIT ENTRIES ============ -->
+  <section id="editEntriesView" class="hide">
+    <div class="card">
+      <h2 class="section">Edit entries (<span id="entryEditCount">0</span>)</h2>
+      <p class="muted" style="font-size:13px;margin-bottom:12px">Tap an entry to edit it (text, photos, department, priority…). Drag the ☰ handle to reorder. High-priority items are pinned 📌 to the top.</p>
+      <div id="entryEditList"></div>
+      <p class="muted" id="entryEditEmpty">No entries yet.</p>
+    </div>
+    <div class="card noprint">
+      <div class="btnrow2">
+        <button class="btn back" id="btnEntryDiscard">Discard changes</button>
+        <button class="btn proceed" id="btnEntrySave">Save changes</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SITE CHECK-IN (selfie + GPS) ============ -->
+  <section id="checkinView" class="hide">
+    <div class="card">
+      <h2 class="section" id="ciTitle">Site check-in</h2>
+      <p class="muted" id="ciSub" style="font-size:13px;margin-bottom:10px">Take a live selfie at the outlet. Your GPS location is verified against the store automatically.</p>
+      <div id="ciStage" style="position:relative;background:#000;border-radius:12px;overflow:hidden;min-height:220px;display:flex;align-items:center;justify-content:center">
+        <video id="ciVideo" autoplay playsinline muted style="width:100%;display:block"></video>
+        <img id="ciShot" class="hide" style="width:100%;display:block" alt="selfie">
+      </div>
+      <canvas id="ciCanvas" class="hide"></canvas>
+      <div class="msg" id="ciLoc" style="margin-top:10px">Getting your location…</div>
+      <div class="btnrow2" style="margin-top:10px">
+        <button class="btn back hide" id="ciRetake">↺ Retake photo</button>
+        <button class="btn add" id="ciCapture">📷 Take selfie</button>
+      </div>
+      <button class="btn small grey" id="ciRetryLoc" style="width:100%;margin-top:8px">↻ Retry location</button>
+      <div class="btnrow2" style="margin-top:12px">
+        <button class="btn cancel" id="ciCancel">Cancel</button>
+        <button class="btn proceed" id="ciContinue" disabled>Continue →</button>
       </div>
     </div>
   </section>
@@ -378,6 +429,43 @@
       <div class="msg" id="inviteMsg"></div>
       <div class="spacer"></div>
       <button class="btn back" id="btnInviteClose">← Done</button>
+    </div>
+  </div>
+
+  <!-- ============ EDIT-ENTRY POPUP ============ -->
+  <div id="entryModal" class="hide" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:70;display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto">
+    <div class="card" style="max-width:520px;width:100%;margin:0">
+      <h2 class="section" id="emTitle">Edit entry</h2>
+
+      <div class="row">
+        <label>Photos <span id="emPhotoMax" class="muted" style="font-weight:400"></span></label>
+        <label class="add-photo-lbl" for="emPhotoInput" id="emAddPhotoLbl">📷 Add photo (camera or gallery)</label>
+        <input type="file" id="emPhotoInput" accept="image/*" multiple class="hide">
+        <div class="thumbrow" id="emPhotos"></div>
+      </div>
+
+      <!-- FINDING fields -->
+      <div id="emFindingFields">
+        <div class="row"><label>Finding / issue observed</label><textarea id="emText" placeholder="Describe what you found..."></textarea></div>
+        <div class="row"><label>Suggested solution / action <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="emSolution" placeholder="Leave blank if not applicable"></textarea></div>
+        <div class="row"><label>Department(s)</label><div class="dept-wrap" id="emDeptWrap"></div></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);margin-bottom:8px"><input type="checkbox" id="emPriority" style="width:auto"> ⚠️ Mark as HIGH PRIORITY</label>
+        <label id="emResolvedRow" class="hide" style="align-items:center;gap:8px;font-size:14px;color:var(--green);font-weight:600;margin-bottom:8px"><input type="checkbox" id="emResolved" style="width:auto"> ✅ This tracked issue is now RESOLVED</label>
+      </div>
+
+      <!-- F&B fields -->
+      <div id="emFnbFields" class="hide">
+        <div class="row"><label>Category</label><div class="dept-wrap" id="emCatWrap"></div></div>
+        <div class="row"><label>Menu name</label><input type="text" id="emMenu" placeholder="e.g. Iced Latte"></div>
+        <div class="row"><label>Finding</label><textarea id="emFnbText" placeholder="Taste, presentation, portion, temperature, etc."></textarea></div>
+        <div class="row"><label>Suggested solution / action <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="emFnbSolution" placeholder="Optional"></textarea></div>
+      </div>
+
+      <div class="btnrow2" style="margin-top:6px">
+        <button class="btn back" id="emDiscard">Discard changes</button>
+        <button class="btn proceed" id="emSave">Save changes</button>
+      </div>
+      <button class="btn cancel" id="emRemove" style="width:100%;margin-top:10px">✕ Remove this entry</button>
     </div>
   </div>
 
@@ -455,7 +543,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ad</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ak</div>
 </div>
 
 <script>
@@ -508,7 +596,7 @@ var me=null;           // {id, email, name, role}
 var authMode="signin"; // or "signup"
 
 var $=function(id){return document.getElementById(id);};
-function show(v){["loginView","homeView","visitView","reportView","teamView","requestsView","scoringView","settingsView"].forEach(function(x){$(x).classList.add("hide");});$(v).classList.remove("hide");window.scrollTo(0,0);}
+function show(v){["loginView","homeView","visitView","reportView","editEntriesView","checkinView","teamView","requestsView","scoringView","settingsView"].forEach(function(x){$(x).classList.add("hide");});$(v).classList.remove("hide");window.scrollTo(0,0);}
 /* ---- Auth-session hardening: stops silent cloud-sync failures (expired login) ---- */
 var authWarn=false;   // true = last sync couldn't confirm the sign-in (prompt re-login) — but we NEVER auto-clear `me`
 function isAuthError(m){ m=(""+m).toLowerCase(); return /row-level security|jwt|not authenticated|unauthorized|invalid token|refresh token|no api key|401|403/.test(m); }
@@ -612,7 +700,7 @@ async function loadProfile(){
   var sess=s.data?s.data.session:null;
   if(!sess){ me=null; return null; }
   var uidv=sess.user.id;
-  var r=await sb.from("profiles").select("id,email,name,role").eq("id",uidv).limit(1);
+  var r=await sb.from("profiles").select("id,email,name,role,username").eq("id",uidv).limit(1);
   if(r.error||!r.data||!r.data.length){
     me={id:uidv,email:sess.user.email,name:(sess.user.user_metadata&&sess.user.user_metadata.name)||sess.user.email,role:"member"};
   } else { me=r.data[0]; }
@@ -622,6 +710,49 @@ async function loadProfile(){
 
 var qexempt=[];   // user ids allowed to skip the questionnaire without a password (owner-managed)
 function isQExempt(id){ return !!(id && qexempt.indexOf(id)>=0); }
+
+/* ===== Site check-in (selfie + GPS) config ===== */
+var checkinReq=[];              // user ids that must do a selfie + GPS check-in at start & submit
+var CHECKIN_RADIUS=150;         // metres: how close counts as "at the store"
+var OUTLET_COORDS={              // baked-in coords "Brand|City|Outlet": {lat,lng[,radius]} — verified pins (default radius 150 m)
+  "Devon|Surabaya|Pakuwon Mall": {lat:-7.2898536, lng:112.6753665},
+  "Hurricane's Grill|Jakarta|Gunawarman": {lat:-6.2361991, lng:106.8073952},
+  "Hurricane's Grill|Surabaya|Imam Bonjol": {lat:-7.2850512, lng:112.7377212},
+  "Lo & Behold|Jakarta|Lippo Mall Puri": {lat:-6.1896797, lng:106.7382747},
+  "Lo & Behold|Jakarta|The Breeze": {lat:-6.3009453, lng:106.6540872},
+  "Toby's Estate|Batam|Grand Batam Mall": {lat:1.1356099, lng:104.0077305},
+  "Toby's Estate|Batam|Hang Nadim Airport": {lat:1.1238305, lng:104.1160331, radius:200},
+  "Toby's Estate|Jakarta|Cilandak Town Square": {lat:-6.2917335, lng:106.8000953},
+  "Toby's Estate|Jakarta|Gandaria City": {lat:-6.2439646, lng:106.7834535, radius:200},
+  "Toby's Estate|Jakarta|Gunawarman": {lat:-6.2327387, lng:106.8077476},
+  "Toby's Estate|Jakarta|Hublife": {lat:-6.1805835, lng:106.7924857, radius:200},
+  "Toby's Estate|Jakarta|Kota Kasablanka": {lat:-6.2242354, lng:106.8421781, radius:200},
+  "Toby's Estate|Jakarta|Lippo Mall Nusantara": {lat:-6.2196999, lng:106.814306, radius:200},
+  "Toby's Estate|Jakarta|Lippo Mall Puri": {lat:-6.190056, lng:106.7386774},
+  "Toby's Estate|Jakarta|Mall Kelapa Gading 3": {lat:-6.1600525, lng:106.9066628},
+  "Toby's Estate|Jakarta|Mall of Indonesia": {lat:-6.1503553, lng:106.8910438},
+  "Toby's Estate|Jakarta|Pakuwon Mall Bekasi": {lat:-6.2566003, lng:106.9894289},
+  "Toby's Estate|Jakarta|PIK Avenue": {lat:-6.1088376, lng:106.7399633},
+  "Toby's Estate|Jakarta|Pondok Indah Mall 2": {lat:-6.2647713, lng:106.7830656},
+  "Toby's Estate|Jakarta|Senayan Park": {lat:-6.2119798, lng:106.8053892},
+  "Toby's Estate|Jakarta|The Breeze": {lat:-6.3015563, lng:106.6533203},
+  "Toby's Estate|Lampung|Lippo Mall Lampung": {lat:-5.4170752, lng:105.2577929, radius:200},
+  "Toby's Estate|Makassar|Trans Studio Makassar": {lat:-5.1596532, lng:119.3940585},
+  "Toby's Estate|Medan|Sun Plaza": {lat:3.5819066, lng:98.6717818},
+  "Toby's Estate|Palembang|Palembang Indah Mall": {lat:-2.9847876, lng:104.7542919},
+  "Toby's Estate|Semarang|DP Mall": {lat:-6.9830844, lng:110.4122422, radius:200},
+  "Toby's Estate|Semarang|Queen City Mall": {lat:-6.9721483, lng:110.4200207},
+  "Toby's Estate|Surabaya|Imam Bonjol": {lat:-7.2850512, lng:112.7377212},
+  "Toby's Estate|Surabaya|Pakuwon City Mall": {lat:-7.2759826, lng:112.8056137},
+  "Toby's Estate|Surabaya|Pakuwon Mall": {lat:-7.2903652, lng:112.6730911, radius:200},
+  "Toby's Estate|Surabaya|Tunjungan Plaza 5": {lat:-7.261542, lng:112.7396095},
+  "Toby's Estate|Yogyakarta|Pakuwon Mall Jogja": {lat:-7.7601891, lng:110.3986037}
+};
+var outletCoords={};            // cloud override (app_config "outletcoords")
+function requiresCheckin(id){ return !!(id && checkinReq.indexOf(id)>=0); }
+function coordKey(s){ return (s.brand||"")+"|"+(s.city||"")+"|"+(s.outlet||""); }
+function outletCoordFor(s){ if(!s) return null; var k=coordKey(s); return outletCoords[k]||OUTLET_COORDS[k]||null; }
+function haversine(la1,lo1,la2,lo2){ var R=6371000,t=Math.PI/180; var dLa=(la2-la1)*t,dLo=(lo2-lo1)*t; var a=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(la1*t)*Math.cos(la2*t)*Math.sin(dLo/2)*Math.sin(dLo/2); return Math.round(2*R*Math.asin(Math.sqrt(a))); }
 async function loadConfigFromCloud(){
   if(!loggedIn()) return;
   try{
@@ -636,10 +767,22 @@ async function loadConfigFromCloud(){
     var rq=await sb.from("app_config").select("data").eq("key","qexempt").limit(1);
     if(!rq.error && rq.data && rq.data.length && rq.data[0].data && Array.isArray(rq.data[0].data.ids)) qexempt=rq.data[0].data.ids;
   }catch(e){}
+  try{
+    var rc=await sb.from("app_config").select("data").eq("key","checkin").limit(1);
+    if(!rc.error && rc.data && rc.data.length && rc.data[0].data){ if(Array.isArray(rc.data[0].data.ids)) checkinReq=rc.data[0].data.ids; if(rc.data[0].data.radius) CHECKIN_RADIUS=rc.data[0].data.radius; }
+  }catch(e){}
+  try{
+    var ro=await sb.from("app_config").select("data").eq("key","outletcoords").limit(1);
+    if(!ro.error && ro.data && ro.data.length && ro.data[0].data) outletCoords=ro.data[0].data||{};
+  }catch(e){}
 }
 async function pushConfig(){
   if(!(isOwner()&&loggedIn())) return;
   try{ await sb.from("app_config").upsert({key:"outlets", data:cfg, updated:Date.now(), updated_by:(me?me.id:null)}); }catch(e){}
+}
+async function pushCheckinReq(){
+  if(!(isOwner()&&loggedIn())) return;
+  try{ await sb.from("app_config").upsert({key:"checkin", data:{ids:checkinReq, radius:CHECKIN_RADIUS}, updated:Date.now(), updated_by:(me?me.id:null)}); }catch(e){}
 }
 async function pushQExempt(){
   if(!(isOwner()&&loggedIn())) return;
@@ -707,8 +850,12 @@ function mergeVisit(srv,sess){
   var live=unionFindings(srv.findings, sess.findings);
   var tomb=mergeTomb(srv.deleted, sess.deleted);
   var localNewer=((sess.summaryM||0) >= (srv.summaryM||0));   // summary: whoever typed last wins (co-inspectors can write it too)
+  var scNewer=((sess.scoresM||0) >= (srv.scoresM||0));        // questionnaire: whoever answered last wins (anyone in a shared visit can fill it)
   return { findings:applyTomb(live,tomb), deleted:tomb, shared_with:unionIds(srv.shared_with,sess.shared_with), coInspectors:unionCo(srv.coInspectors,sess.coInspectors),
-           summary:(localNewer? sess.summary : srv.summary), summaryM:Math.max(sess.summaryM||0, srv.summaryM||0) };
+           summary:(localNewer? sess.summary : srv.summary), summaryM:Math.max(sess.summaryM||0, srv.summaryM||0),
+           scores:(scNewer? sess.scores : srv.scores), scoreNotes:(scNewer? sess.scoreNotes : srv.scoreNotes),
+           scoreSubmitted:(scNewer? sess.scoreSubmitted : srv.scoreSubmitted), scoreSkipped:(scNewer? sess.scoreSkipped : srv.scoreSkipped),
+           scoresM:Math.max(sess.scoresM||0, srv.scoresM||0) };
 }
 // Read-only pull: fetch the server copy of a SHARED visit and merge it into the local one
 // (so teammates' new/edited/deleted entries appear without having to Save first).
@@ -720,7 +867,8 @@ async function pullMerge(sess){
   var mg=mergeVisit(srv,sess);
   sess.findings=mg.findings; sess.deleted=mg.deleted; sess.shared_with=mg.shared_with; sess.coInspectors=mg.coInspectors;
   sess.summary=mg.summary; sess.summaryM=mg.summaryM;   // summary is collaborative (newest wins)
-  if(!iAmOwner){ sess.scores=srv.scores||sess.scores; sess.scoreNotes=srv.scoreNotes||sess.scoreNotes; sess.scoreSubmitted=srv.scoreSubmitted; sess.scoreSkipped=srv.scoreSkipped; sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
+  sess.scores=mg.scores; sess.scoreNotes=mg.scoreNotes; sess.scoreSubmitted=mg.scoreSubmitted; sess.scoreSkipped=mg.scoreSkipped; sess.scoresM=mg.scoresM;   // questionnaire is collaborative (newest wins)
+  if(!iAmOwner){ sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
   persist(); return true;
 }
 async function pushOnce(sess){
@@ -735,16 +883,18 @@ async function pushOnce(sess){
       var srv=await fetchServerVisit(sess.id);
       if(srv){
         var mg=mergeVisit(srv,sess);
+        var scoreFields={scores:mg.scores,scoreNotes:mg.scoreNotes,scoreSubmitted:mg.scoreSubmitted,scoreSkipped:mg.scoreSkipped,scoresM:mg.scoresM};
         if(iAmOwner){
-          dataToStore=Object.assign({},sess,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,summary:mg.summary,summaryM:mg.summaryM,updated:Date.now()});
+          dataToStore=Object.assign({},sess,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,summary:mg.summary,summaryM:mg.summaryM,updated:Date.now()},scoreFields);
         } else {
-          // co-inspector: keep the owner's questionnaire/status; contribute merged findings, deletions & summary (newest wins)
-          dataToStore=Object.assign({},srv,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,summary:mg.summary,summaryM:mg.summaryM,updated:Date.now()});
+          // co-inspector: keep the owner's status/departure; contribute merged findings, deletions, summary & questionnaire (newest wins)
+          dataToStore=Object.assign({},srv,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,summary:mg.summary,summaryM:mg.summaryM,updated:Date.now()},scoreFields);
           ownerId=srv.user_id||ownerId;
         }
-        // reflect the merged result back onto the local copy so everyone's entries + summary show
+        // reflect the merged result back onto the local copy so everyone's entries + summary + questionnaire show
         sess.findings=mg.findings; sess.deleted=mg.deleted; sess.shared_with=mg.shared_with; sess.coInspectors=mg.coInspectors; sess.summary=mg.summary; sess.summaryM=mg.summaryM;
-        if(!iAmOwner){ sess.scores=srv.scores||sess.scores; sess.scoreNotes=srv.scoreNotes||sess.scoreNotes; sess.scoreSubmitted=srv.scoreSubmitted; sess.scoreSkipped=srv.scoreSkipped; sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
+        sess.scores=mg.scores; sess.scoreNotes=mg.scoreNotes; sess.scoreSubmitted=mg.scoreSubmitted; sess.scoreSkipped=mg.scoreSkipped; sess.scoresM=mg.scoresM;
+        if(!iAmOwner){ sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
       } else if(!iAmOwner){
         return {ok:false, needOwner:true};   // owner hasn't created the row yet; co-inspector can't insert
       }
@@ -800,6 +950,8 @@ async function pullVisits(){
 function renderAuthMode(){
   $("loginTitle").textContent = authMode==="signup"?"Create an account":"Sign in";
   $("nameRow").style.display = authMode==="signup"?"block":"none";
+  $("emailRow").style.display = authMode==="signup"?"block":"none";   // email only at sign-up
+  $("userRow").style.display  = authMode==="signup"?"none":"block";   // username only at sign-in
   var nl=$("authNoLast"); if(nl){ $("authLast").disabled=nl.checked; if(nl.checked)$("authLast").value=""; }
   $("btnAuthGo").textContent = authMode==="signup"?"Create account":"Sign in";
   $("btnAuthToggle").textContent = authMode==="signup"?"Already have an account? Sign in":"New here? Create an account";
@@ -812,25 +964,35 @@ $("authNoLast").addEventListener("change",function(){ $("authLast").disabled=thi
 function firstNameOf(name){ return ((name||"").trim().split(/\s+/)[0])||(name||""); }
 $("btnAuthSettings").addEventListener("click",function(){openSettings();});
 $("btnAuthGo").addEventListener("click",async function(){
-  var email=$("authEmail").value.trim(), pass=$("authPass").value;
+  var pass=$("authPass").value;
   var msg=$("authMsg"); msg.className="msg";
   if(!sb){ msg.className="msg err"; msg.textContent="Cloud not set up. Open ⚙ Setup and paste your Supabase URL + key first."; return; }
-  if(!email||!pass){ msg.className="msg err"; msg.textContent="Enter email and password."; return; }
   msg.textContent="Please wait...";
   try{
     if(authMode==="signup"){
+      var email=$("authEmail").value.trim();
       var first=$("authFirst").value.trim(), middle=$("authMiddle").value.trim(), noLast=$("authNoLast").checked, last=noLast?"":$("authLast").value.trim();
       if(!first){ msg.className="msg err"; msg.textContent="Enter your first name."; return; }
       if(!last && !noLast){ msg.className="msg err"; msg.textContent="Enter your last name (or tick “I don't have a last name”)."; return; }
+      if(!email||!pass){ msg.className="msg err"; msg.textContent="Enter email and password."; return; }
       var name=[first,middle,last].filter(Boolean).join(" ");
-      var su=await sb.auth.signUp({email:email,password:pass,options:{data:{name:name,first_name:first}}});
+      var su=await sb.auth.signUp({email:email,password:pass,options:{data:{name:name,first_name:first,no_last:noLast}}});
       if(su.error) throw su.error;
       if(!su.data.session){ // email confirmation on
         var si=await sb.auth.signInWithPassword({email:email,password:pass});
-        if(si.error){ msg.className="msg ok"; msg.textContent="Account created. Check your email to confirm, then sign in."; authMode="signin"; renderAuthMode(); return; }
+        if(si.error){ msg.className="msg ok"; msg.textContent="Account created. Check your email to confirm, then sign in with your username."; authMode="signin"; renderAuthMode(); return; }
       }
+      await afterLogin();
+      // show the person their generated username after first sign-up
+      if(me&&me.username){ alert("Your username is:  "+me.username+"\n\nUse this username (not your email) to sign in from now on."); }
+      return;
     } else {
-      var r=await sb.auth.signInWithPassword({email:email,password:pass});
+      var uname=$("authUser").value.trim();
+      if(!uname||!pass){ msg.className="msg err"; msg.textContent="Enter your username and password."; return; }
+      var lk=await sb.rpc("email_for_username",{u:uname});
+      if(lk.error){ throw new Error("Could not look up that username. "+(lk.error.message||"")); }
+      if(!lk.data){ msg.className="msg err"; msg.textContent="Username not found. Check spelling (usernames are all lowercase)."; return; }
+      var r=await sb.auth.signInWithPassword({email:lk.data,password:pass});
       if(r.error) throw r.error;
     }
     await afterLogin();
@@ -1020,9 +1182,13 @@ $("btnStart").addEventListener("click",function(){
   var k=findKey();if(!k){alert("Please choose Brand, City, Outlet and Date first.");return;}
   if(!inspector){if(!confirm("You haven't entered your name. Continue anyway?"))return;}
   var ex=sessions.find(matchKeyFn(k));
-  if(ex){ex.status="open";if(!ex.inspector&&inspector)ex.inspector=inspector;if(!ex.user_id&&me)ex.user_id=me.id;openVisit(ex);return;}
+  if(ex){ex.status="open";if(!ex.inspector&&inspector)ex.inspector=inspector;if(!ex.user_id&&me)ex.user_id=me.id;
+    if(requiresCheckin(me&&me.id) && !ex.checkinStart){ current=ex; startCheckin("start",function(){ openVisit(ex); }); return; }
+    openVisit(ex);return;}
   var sess={id:uid(),user_id:(me?me.id:null),inspector:inspector||"",brand:k.brand,city:k.city,outlet:k.outlet,date:k.date,arrival:$("inpArrival").value||nowHM(),departure:"",status:"open",findings:[],shared_with:[],coInspectors:[],created:Date.now(),updated:Date.now(),synced:false};
-  sessions.push(sess);persist();openVisit(sess);
+  sessions.push(sess);persist();
+  if(requiresCheckin(me&&me.id)){ current=sess; startCheckin("start",function(){ openVisit(sess); }); return; }
+  openVisit(sess);
 });
 /* ===== Invite co-inspectors (shared visit) ===== */
 var teamProfiles=null;
@@ -1078,7 +1244,7 @@ function openVisit(s){current=s;draftDepts=[];draftPhotos=[];editingIndex=null;e
   var shared=((s.shared_with&&s.shared_with.length)||(s.coInspectors&&s.coInspectors.length));
   $("btnInvite").classList.toggle("hide", !(loggedIn() && creator && !doneMode));   // only initiator invites
   $("btnPullLatest").classList.toggle("hide", !(loggedIn() && shared && !doneMode)); // shared visits: pull teammates' entries
-  $("scoringCard").classList.toggle("hide", !creator);                              // only initiator fills questionnaire
+  $("scoringCard").classList.toggle("hide", !(creator||coi));                        // initiator + invited co-inspectors can fill the questionnaire
   if(loggedIn() && shared && !doneMode){ pullMerge(s).then(function(ch){ if(ch && current===s){ renderFindings(); updateDeptSummary(); $("visitHeader").innerHTML=headerHTML(s); } }); }
   // Cancel = discard in-progress. Hidden when editing a finished report; co-inspectors can't cancel; members only if never finished.
   $("btnCancel").classList.toggle("hide", doneMode || coi || !(isStaff() || !s.everDone));
@@ -1279,6 +1445,225 @@ function makeGroupSortable(el,gkey){
   }});
 }
 function refreshPreviewPaper(){ if(current && $("reportView") && !$("reportView").classList.contains("hide")) $("reportPaper").innerHTML=reportHTML(current); }
+
+/* ============ Edit Entries page (own screen + full-edit popup) ============
+   Works on a CLONE so nothing touches the live visit until "Save changes"
+   (this keeps Discard clean and stops auto-sync from leaking half-done edits). */
+var entryWork=null, entryOrder=null, entryDel=null, entryEditUid=null;
+var entryPhotoWork=[], entryKindWork="finding", entryDeptWork=[], entryCatWork="Beverage";
+function cloneJSON(o){ try{ return o?JSON.parse(JSON.stringify(o)):o; }catch(e){ return o; } }
+function findByUid(arr,u){ for(var i=0;i<(arr||[]).length;i++){ if(arr[i].uid===u) return {i:i,f:arr[i]}; } return null; }
+function openEntryEditor(){
+  if(!current) return;
+  ensureUids(current);
+  entryWork=cloneJSON(current.findings||[]);
+  entryOrder=cloneJSON(current.deptOrder||{});
+  entryDel=cloneJSON(current.deleted||{});
+  $("barSub").textContent="· edit entries";
+  renderEntryEditor();
+  show("editEntriesView");
+}
+function editorGroups(){
+  var f=entryWork||[]; var res=[]; var holder={deptOrder:entryOrder};
+  REAL_DEPTS.forEach(function(d){
+    var items=orderByGroup(f.filter(function(x){return x.kind!=="fnb" && expandDepts(x.depts).indexOf(d)>=0;}), d, holder);
+    if(items.length) res.push({key:d,label:d,items:items});
+  });
+  var gen=orderByGroup(f.filter(function(x){return x.kind!=="fnb" && expandDepts(x.depts).length===0;}), "__none__", holder);
+  if(gen.length) res.push({key:"__none__",label:"General (no department)",items:gen});
+  FNB_CATS.forEach(function(c){
+    var items=orderByGroup(f.filter(function(x){return x.kind==="fnb" && (x.category||"")===c;}), "FNB:"+c, holder);
+    if(items.length) res.push({key:"FNB:"+c,label:"F&B · "+c,items:items});
+  });
+  var other=orderByGroup(f.filter(function(x){return x.kind==="fnb" && FNB_CATS.indexOf(x.category||"")<0;}), "FNB:Other", holder);
+  if(other.length) res.push({key:"FNB:Other",label:"F&B · Other",items:other});
+  return res;
+}
+function renderEntryEditor(){
+  var list=$("entryEditList"); list.innerHTML="";
+  var all=entryWork||[]; $("entryEditCount").textContent=all.length; $("entryEditEmpty").style.display=all.length?"none":"block";
+  editorGroups().forEach(function(g){
+    if(!g.items.length) return;
+    var sec=document.createElement("div"); sec.className="reorder-group";
+    var h=document.createElement("div"); h.className="rg-h"; h.textContent=g.label; sec.appendChild(h);
+    var pinned=g.items.filter(function(x){return x.priority;});
+    var movable=g.items.filter(function(x){return !x.priority;});
+    var n=0;
+    if(pinned.length){ var pd=document.createElement("div"); pd.className="rg-pinned"; pinned.forEach(function(item){ pd.appendChild(buildEditorRow(item,++n,true)); }); sec.appendChild(pd); }
+    var ml=document.createElement("div"); ml.className="rg-list"; ml.setAttribute("data-gkey",g.key);
+    movable.forEach(function(item){ ml.appendChild(buildEditorRow(item,++n,false)); });
+    sec.appendChild(ml);
+    list.appendChild(sec);
+    makeEditorSortable(ml,g.key);
+  });
+}
+function buildEditorRow(item,num,pinned){
+  var row=document.createElement("div"); row.className="finding"+(pinned?" pinned":""); row.setAttribute("data-uid",item.uid); if(item.priority)row.style.background="#fef9c3";
+  var tags=(item.depts||[]).map(function(d){return "<span class='tag'>"+d+"</span>";}).join("");
+  var kindTag=item.kind==="fnb"?"<span class='tag' style='background:#fce7f3;color:#9d174d'>"+esc(item.category||"F&B")+"</span>":"";
+  var prio=item.priority?"<span class='tag' style='background:#fef08a;color:#854d0e'>⚠️ HIGH PRIORITY</span>":"";
+  var menu=item.kind==="fnb"?"<div style='font-weight:700'>🍽 "+esc(item.menuName||"")+"</div>":"";
+  var photos=photosOf(item).map(function(p){return "<img src='"+p+"'>";}).join("");
+  var handle=pinned?"<div class='draghandle pinnedlock' title='High priority — pinned to top'>📌</div>":"<div class='draghandle' title='Drag to reorder'>☰</div>";
+  row.innerHTML=handle+"<div class='no'>"+num+"</div><div class='body tap'>"+menu+"<div class='txt'>"+esc(item.text||"(photo only)")+"</div>"+(item.solution?"<div class='muted' style='margin-top:4px'>💡 <b>Solution:</b> "+esc(item.solution)+"</div>":"")+"<div class='tags'>"+prio+kindTag+tags+"</div><div class='muted' style='margin-top:6px;font-size:12px'>✎ Tap to edit</div></div>"+(photos?"<div class='fphoto'>"+photos+"</div>":"");
+  row.querySelector(".body").addEventListener("click",function(){ openEntryModal(item.uid); });
+  return row;
+}
+function makeEditorSortable(el,gkey){
+  if(!window.Sortable) return;
+  window.Sortable.create(el,{handle:".draghandle",animation:150,onEnd:function(){
+    var ids=[].slice.call(el.querySelectorAll("[data-uid]")).map(function(r){return r.getAttribute("data-uid");});
+    entryOrder=entryOrder||{}; entryOrder[gkey]=ids;
+  }});
+}
+/* ---- popup ---- */
+function openEntryModal(u){
+  var hit=findByUid(entryWork,u); if(!hit) return; var it=hit.f;
+  entryEditUid=u;
+  entryKindWork=(it.kind==="fnb")?"fnb":"finding";
+  entryPhotoWork=photosOf(it).slice();
+  entryDeptWork=(it.depts||[]).slice();
+  entryCatWork=it.category||"Beverage";
+  $("emTitle").textContent=entryKindWork==="fnb"?"Edit food / beverage":"Edit finding";
+  $("emFindingFields").classList.toggle("hide", entryKindWork!=="finding");
+  $("emFnbFields").classList.toggle("hide", entryKindWork!=="fnb");
+  if(entryKindWork==="finding"){
+    $("emText").value=it.text||"";
+    $("emSolution").value=it.solution||"";
+    $("emPriority").checked=!!it.priority;
+    renderEmDepts();
+    $("emResolvedRow").classList.toggle("hide", !it.issueId);
+    if(it.issueId){ $("emResolvedRow").style.display="flex"; $("emResolved").checked=!!it.resolved; }
+  } else {
+    renderEmCats();
+    $("emMenu").value=it.menuName||"";
+    $("emFnbText").value=it.text||"";
+    $("emFnbSolution").value=it.solution||"";
+  }
+  renderEmPhotos();
+  $("entryModal").classList.remove("hide");
+}
+function renderEmDepts(){ var w=$("emDeptWrap"); w.innerHTML=""; REAL_DEPTS.forEach(function(d){ var b=document.createElement("button"); b.type="button"; b.className="dept"+(entryDeptWork.indexOf(d)>=0?" on":""); b.textContent=d; b.addEventListener("click",function(){ var i=entryDeptWork.indexOf(d); if(i>=0)entryDeptWork.splice(i,1); else entryDeptWork.push(d); renderEmDepts(); }); w.appendChild(b); }); }
+function renderEmCats(){ var w=$("emCatWrap"); w.innerHTML=""; FNB_CATS.forEach(function(c){ var b=document.createElement("button"); b.type="button"; b.className="dept"+(entryCatWork===c?" catsel":""); b.textContent=c; b.addEventListener("click",function(){ entryCatWork=c; renderEmCats(); }); w.appendChild(b); }); }
+function renderEmPhotos(){
+  var w=$("emPhotos"); w.innerHTML="";
+  entryPhotoWork.forEach(function(p,idx){
+    var d=document.createElement("div"); d.className="thumbprev"; d.style.display="inline-block"; d.style.marginRight="6px";
+    d.innerHTML="<img src='"+p+"'><button type='button' class='x'>×</button>";
+    d.querySelector(".x").addEventListener("click",function(){ entryPhotoWork.splice(idx,1); renderEmPhotos(); });
+    w.appendChild(d);
+  });
+  var max=entryKindWork==="fnb"?1:3;
+  $("emAddPhotoLbl").style.display=entryPhotoWork.length>=max?"none":"inline-flex";
+  $("emPhotoMax").textContent=entryKindWork==="fnb"?"(1 required)":"(up to 3)";
+}
+$("emPhotoInput").addEventListener("change",function(e){
+  var files=[].slice.call(e.target.files||[]); var max=entryKindWork==="fnb"?1:3;
+  files.forEach(function(file){ if(entryPhotoWork.length>=max) return; compressImage(file,function(u){ if(entryPhotoWork.length<max){ entryPhotoWork.push(u); renderEmPhotos(); } }); });
+  this.value="";
+});
+function closeEntryModal(){ $("entryModal").classList.add("hide"); entryEditUid=null; }
+$("emDiscard").addEventListener("click",closeEntryModal);
+$("entryModal").addEventListener("click",function(e){ if(e.target===this) closeEntryModal(); });
+$("emSave").addEventListener("click",function(){
+  var hit=findByUid(entryWork,entryEditUid); if(!hit){ closeEntryModal(); return; } var it=hit.f;
+  if(entryKindWork==="finding"){
+    var t=$("emText").value.trim();
+    if(!t && !entryPhotoWork.length){ alert("Add a description or at least one photo."); return; }
+    it.text=t; it.solution=$("emSolution").value.trim(); it.depts=entryDeptWork.slice(); it.priority=$("emPriority").checked;
+    if(it.issueId){ it.resolved=$("emResolved").checked; }
+    it.photos=entryPhotoWork.slice(); delete it.photo;
+  } else {
+    var menu=$("emMenu").value.trim(), txt=$("emFnbText").value.trim();
+    if(!menu){ alert("Menu name is required."); $("emMenu").focus(); return; }
+    if(!txt){ alert("Finding is required."); $("emFnbText").focus(); return; }
+    if(!entryPhotoWork.length){ alert("A photo is required for food/beverage."); return; }
+    it.category=entryCatWork; it.menuName=menu; it.text=txt; it.solution=$("emFnbSolution").value.trim();
+    it.photo=entryPhotoWork[0]; delete it.photos;
+  }
+  it._m=Date.now();
+  closeEntryModal();
+  renderEntryEditor();
+});
+$("emRemove").addEventListener("click",function(){
+  if(!confirm("Remove this entry permanently? This cannot be undone once you Save changes.")) return;
+  var hit=findByUid(entryWork,entryEditUid); if(hit){ var rm=hit.f; entryDel=entryDel||{}; if(rm.uid) entryDel[rm.uid]=Date.now(); entryWork.splice(hit.i,1); }
+  closeEntryModal();
+  renderEntryEditor();
+});
+/* ---- page save / discard ---- */
+$("btnEditEntries").addEventListener("click",openEntryEditor);
+$("btnEditEntriesDone").addEventListener("click",openEntryEditor);
+$("btnEntryDiscard").addEventListener("click",function(){ if(current) openReport(current); });
+$("btnEntrySave").addEventListener("click",function(){
+  if(!current){ show("homeView"); return; }
+  current.findings=entryWork||[]; current.deptOrder=entryOrder||{}; current.deleted=entryDel||{};
+  current.updated=Date.now(); current.synced=false;
+  ensureUids(current); persist();
+  openReport(current);
+  pushSession(current, "Entries saved");
+});
+
+/* ============ Site check-in: live selfie + GPS (own page) ============ */
+var ciPhase=null, ciStream=null, ciShot=null, ciPos=null, ciDist=null, ciWithin=false, ciOnPass=null;
+function startCheckin(phase,onPass){
+  if(!current) return;
+  ciPhase=phase; ciOnPass=onPass; ciShot=null; ciPos=null; ciDist=null; ciWithin=false;
+  $("ciTitle").textContent = phase==="start" ? "Check-in — starting visit" : "Check-out — submitting report";
+  $("ciSub").textContent = "Outlet: "+(current.outlet||"")+" — take a live selfie; your GPS is verified against the store (must be within "+((outletCoordFor(current)&&outletCoordFor(current).radius)||CHECKIN_RADIUS)+" m).";
+  $("ciShot").classList.add("hide"); $("ciVideo").classList.remove("hide");
+  $("ciCapture").classList.remove("hide"); $("ciRetake").classList.add("hide");
+  $("ciContinue").disabled=true; $("ciLoc").className="msg"; $("ciLoc").textContent="Getting your location…";
+  show("checkinView"); $("barSub").textContent="· check-in";
+  openCiCamera(); getCiLoc();
+}
+function openCiCamera(){
+  stopCiCamera();
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ $("ciLoc").className="msg err"; $("ciLoc").textContent="Camera not available on this device/browser."; return; }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false}).then(function(st){ ciStream=st; var v=$("ciVideo"); v.srcObject=st; v.play&&v.play().catch(function(){}); }).catch(function(e){ $("ciLoc").className="msg err"; $("ciLoc").textContent="Camera blocked — allow camera access to check in, then Retake."; });
+}
+function stopCiCamera(){ if(ciStream){ try{ ciStream.getTracks().forEach(function(t){t.stop();}); }catch(e){} ciStream=null; } var v=$("ciVideo"); if(v) v.srcObject=null; }
+$("ciCapture").addEventListener("click",function(){
+  var v=$("ciVideo"); if(!v.videoWidth){ alert("Camera not ready yet — give it a second."); return; }
+  var maxW=640, scale=Math.min(1,maxW/v.videoWidth), w=Math.round(v.videoWidth*scale), h=Math.round(v.videoHeight*scale);
+  var c=$("ciCanvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(v,0,0,w,h);
+  ciShot=c.toDataURL("image/jpeg",0.6);
+  $("ciShot").src=ciShot; $("ciShot").classList.remove("hide"); $("ciVideo").classList.add("hide");
+  $("ciCapture").classList.add("hide"); $("ciRetake").classList.remove("hide");
+  stopCiCamera(); updateCiState();
+});
+$("ciRetake").addEventListener("click",function(){ ciShot=null; $("ciShot").classList.add("hide"); $("ciVideo").classList.remove("hide"); $("ciCapture").classList.remove("hide"); $("ciRetake").classList.add("hide"); openCiCamera(); updateCiState(); });
+function getCiLoc(){
+  if(!navigator.geolocation){ $("ciLoc").className="msg err"; $("ciLoc").textContent="Location not available on this device."; return; }
+  $("ciLoc").className="msg"; $("ciLoc").textContent="Getting your location…";
+  navigator.geolocation.getCurrentPosition(
+    function(p){ ciPos={lat:p.coords.latitude,lng:p.coords.longitude,acc:Math.round(p.coords.accuracy||0)}; evalCiLoc(); },
+    function(e){ ciPos=null; $("ciLoc").className="msg err"; $("ciLoc").textContent="Location blocked/failed — enable GPS & allow location, then Retry location."; updateCiState(); },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+$("ciRetryLoc").addEventListener("click",getCiLoc);
+function evalCiLoc(){
+  if(!ciPos) return;
+  var co=outletCoordFor(current);
+  if(!co){ ciDist=null; ciWithin=true; $("ciLoc").className="msg ok"; $("ciLoc").textContent="Location recorded (no geofence set for this outlet yet). GPS accuracy ±"+ciPos.acc+" m."; updateCiState(); return; }
+  ciDist=haversine(ciPos.lat,ciPos.lng,co.lat,co.lng);
+  var rad=co.radius||CHECKIN_RADIUS;
+  ciWithin=(ciDist<=rad);
+  if(ciWithin){ $("ciLoc").className="msg ok"; $("ciLoc").textContent="✓ At the outlet — "+ciDist+" m away (GPS ±"+ciPos.acc+" m)."; }
+  else{ $("ciLoc").className="msg err"; $("ciLoc").textContent="✕ Too far: "+ciDist+" m from the outlet (limit "+rad+" m, GPS ±"+ciPos.acc+" m). Move closer and Retry location."; }
+  updateCiState();
+}
+function updateCiState(){ $("ciContinue").disabled = !(ciShot && ciPos && ciWithin); }
+$("ciCancel").addEventListener("click",function(){ stopCiCamera(); ciOnPass=null; if(ciPhase==="start"){ current=null; renderLists(); $("barSub").textContent=""; show("homeView"); } else if(current){ openReport(current); } else { show("homeView"); } });
+$("ciContinue").addEventListener("click",function(){
+  if(!(ciShot && ciPos && ciWithin)) return;
+  var co=outletCoordFor(current);
+  var rec={ selfie:ciShot, lat:ciPos.lat, lng:ciPos.lng, acc:ciPos.acc, dist:ciDist, radius:(co?(co.radius||CHECKIN_RADIUS):null), at:Date.now(), time:nowHM(), by:(me?me.name:(inspector||"")) };
+  if(ciPhase==="start") current.checkinStart=rec; else current.checkinDone=rec;
+  current.updated=Date.now(); current.synced=false; persist();
+  stopCiCamera();
+  var cb=ciOnPass; ciOnPass=null; if(cb) cb();
+});
 function updateDeptSummary(){$("deptSummary").value=unionDepts(current).join(" / ")||"—";}
 $("editArrival").addEventListener("change",function(){if(current){current.arrival=$("editArrival").value;current.updated=Date.now();current.synced=false;persist();}});
 
@@ -1372,7 +1757,7 @@ function renderScoring(){
   window.scrollTo(0,0);
 }
 function updateCatHeader(card,g){ /* per-category score no longer shown */ }
-function onScoreChange(){ if(current){ current.updated=Date.now(); current.synced=false; persist(); } updateVisitScoreBtn(); }
+function onScoreChange(){ if(current){ current.updated=Date.now(); current.scoresM=Date.now(); current.synced=false; persist(); } updateVisitScoreBtn(); }
 function buildScoreItems(body,g,card){
   body.innerHTML="";
   var locked=!!(current&&current.scoreSubmitted);
@@ -1396,7 +1781,7 @@ function buildScoreItems(body,g,card){
 }
 function qGoBack(){ if(qPage===0){ show("visitView"); $("barSub").textContent="· "+(current?current.outlet:""); updateVisitScoreBtn(); } else { qPage--; renderScoring(); } }
 function qGoNext(){ if(qPage < QPAGES.length-1){ qPage++; renderScoring(); } else if(current&&current.scoreSubmitted){ openReport(current); } else { submitQuestionnaire(); } }
-function submitQuestionnaire(){ if(!confirm("Submit your report? Once submitted, you can't change the answers.")) return; current.scoreSubmitted=true; current.scoreSkipped=false; current.updated=Date.now(); current.synced=false; persist(); openReport(current); }
+function submitQuestionnaire(){ if(!confirm("Submit your report? Once submitted, you can't change the answers.")) return; current.scoreSubmitted=true; current.scoreSkipped=false; current.updated=Date.now(); current.scoresM=Date.now(); current.synced=false; persist(); openReport(current); }
 async function skipQuestionnaire(){
   if(!current) return;
   if(!loggedIn() || isQExempt(me.id)){
@@ -1407,7 +1792,7 @@ async function skipQuestionnaire(){
     var ok=await verifyPassword(pass);
     if(!ok){ alert("Password incorrect — questionnaire not skipped."); return; }
   }
-  current.scoreSkipped=true; current.scoreSubmitted=true; current.updated=Date.now(); current.synced=false; persist(); openReport(current);
+  current.scoreSkipped=true; current.scoreSubmitted=true; current.updated=Date.now(); current.scoresM=Date.now(); current.synced=false; persist(); openReport(current);
 }
 $("btnSkipQ").addEventListener("click",skipQuestionnaire);
 $("btnScoring").addEventListener("click",openScoring);
@@ -1432,10 +1817,11 @@ function openReport(s){
   var editable=(openMode || canEdit(s) || (isSharedParticipant(s) && withinDays(s.date,7)));
   $("reportActionsOpen").classList.toggle("hide", !openMode);   // in-progress preview
   $("reportActionsDone").classList.toggle("hide", openMode);    // finished report
-  $("findingsEditCard").classList.toggle("hide", !editable);    // reorder/edit/remove list
+  $("findingsEditCard").classList.add("hide");                  // entries now edited on their own page
+  $("btnEditEntries").classList.toggle("hide", !editable);      // open-mode Edit entries button
+  $("btnEditEntriesDone").classList.toggle("hide", !(editable && !openMode));  // done-mode Edit entries button
   if(editable){
-    if(loggedIn()&&isShared(s)){ pullMerge(s).then(function(ch){ if(ch && current===s && !$("reportView").classList.contains("hide")){ renderFindings(); refreshPreviewPaper(); } }); }
-    renderFindings();
+    if(loggedIn()&&isShared(s)){ pullMerge(s).then(function(ch){ if(ch && current===s && !$("reportView").classList.contains("hide")){ refreshPreviewPaper(); } }); }
   }
   $("summaryEditRow").classList.toggle("hide", !editable);   // anyone who can edit the visit (incl. co-inspectors) can write the summary
   if(openMode){
@@ -1456,7 +1842,14 @@ function openReport(s){
 $("btnPvBack").addEventListener("click",function(){ renderLists(); $("barSub").textContent=""; show("homeView"); });
 $("btnPvAdd").addEventListener("click",function(){ if(current){ openVisit(current); var el=$("findText"); if(el&&el.scrollIntoView) el.scrollIntoView({block:"center"}); } });
 $("btnPvCancel").addEventListener("click",discardVisit);
-$("btnPvDone").addEventListener("click",function(){ if(!current)return; if(current.scoreSubmitted) finishVisit(); else openScoring(); });
+$("btnPvDone").addEventListener("click",function(){ if(!current)return; if(current.scoreSubmitted) doFinish(); else openScoring(); });
+function doFinish(){
+  if(!current) return;
+  // check the summary rule BEFORE the selfie, so nobody takes a photo then gets bounced
+  if(summaryRequired()){ var sm=(current.summary||"").trim(); if(sm.length<SUMMARY_MIN){ alert("A summary of at least "+SUMMARY_MIN+" characters is required before finishing (currently "+sm.length+")."); show("reportView"); updateSummaryHint(); var el=$("reportSummary"); if(el){ el.focus(); if(el.scrollIntoView) el.scrollIntoView({block:"center"}); } return; } }
+  if(requiresCheckin(me&&me.id) && !current.checkinDone){ startCheckin("done", function(){ finishVisit(); }); return; }
+  finishVisit();
+}
 var SUMMARY_MIN=50;
 function summaryRequired(){ return loggedIn() && !isStaff(); }   // members only
 function updateSummaryHint(){
@@ -1827,7 +2220,23 @@ function reportHTML(s){
   if(fnb.length){ pages.push(head("Food & Beverage")+fnbTable(fnb)); }
   // ---- Detailed questionnaire pages (after F&B) — final report only ----
   if(done && !skipped && sc.answered>0){ deptDetailPages(sc).forEach(function(p){ pages.push(p); }); }
+  // ---- Site check-in verification (very last page) ----
+  if(s.checkinStart || s.checkinDone){ pages.push(checkinPage(s)); }
   return pages.map(function(h,idx){ return "<div class='report-page'"+(idx>0?" style='page-break-before:always'":"")+">"+h+"</div>"; }).join("");
+}
+function checkinPage(s){
+  function blk(title,r){
+    if(!r) return "<div style='flex:1;min-width:220px'><div class='mut-h'>"+title+"</div><div class='muted'>Not recorded.</div></div>";
+    var loc=(r.lat!=null? Number(r.lat).toFixed(6)+", "+Number(r.lng).toFixed(6):"—");
+    var dist=(r.dist!=null? r.dist+" m from outlet"+(r.radius?" · limit "+r.radius+" m":"") : "no geofence set");
+    var status=(r.dist==null? "" : (r.radius && r.dist<=r.radius ? " <span style='color:#0a7a4a;font-weight:700'>✓ at store</span>" : " <span style='color:#9b0a0a;font-weight:700'>out of range</span>"));
+    return "<div style='flex:1;min-width:220px'><div class='mut-h'>"+title+status+"</div>"+
+      (r.selfie?"<img src='"+r.selfie+"' style='width:100%;max-width:250px;border-radius:10px;border:1px solid #ccc'>":"")+
+      "<div style='font-size:13px;margin-top:6px;line-height:1.5'><b>Time:</b> "+esc(r.time||"")+(r.by?" · "+esc(r.by):"")+"<br><b>Coordinates:</b> "+loc+"<br><b>GPS accuracy:</b> ±"+(r.acc||0)+" m<br><b>Distance:</b> "+dist+"</div></div>";
+  }
+  return "<div class='rep-title'>SITE CHECK-IN VERIFICATION</div>"+
+    "<div class='rep-head'><b>Brand:</b> "+esc(s.brand)+" | <b>City:</b> "+esc(s.city)+" | <b>Outlet:</b> "+esc(s.outlet)+(inspectorsOf(s).length?" | <b>Inspector"+(inspectorsOf(s).length>1?"s":"")+":</b> "+esc(inspectorsOf(s).join(", ")):"")+"<br><b>Date:</b> "+fmtDateLong(s.date)+"</div>"+
+    "<div style='display:flex;gap:22px;margin-top:16px;flex-wrap:wrap'>"+blk("CHECK-IN · start of visit",s.checkinStart)+blk("CHECK-OUT · report submitted",s.checkinDone)+"</div>";
 }
 function scorePage(s,c){
   var rows="", curDept="";
@@ -1882,7 +2291,7 @@ function updateAuthBar(changed){
   var t=$("authBarText");
   if(loggedIn()){
     var roleTxt=me.role.charAt(0).toUpperCase()+me.role.slice(1);
-    t.innerHTML="Signed in: <b>"+esc(me.name||me.email)+"</b> ("+roleTxt+")"+(changed!=null?" · "+changed+" update(s) loaded":"")+" &nbsp;<a href='#' id='lnkSignout'>Sign out</a>"+(isOwner()?" &nbsp;<a href='#' id='lnkTeam'>Manage team</a>":"");
+    t.innerHTML="Signed in: <b>"+esc(me.name||me.email)+"</b> ("+roleTxt+")"+(me.username?" · <span class='muted'>@"+esc(me.username)+"</span>":"")+(changed!=null?" · "+changed+" update(s) loaded":"")+" &nbsp;<a href='#' id='lnkSignout'>Sign out</a>"+(isOwner()?" &nbsp;<a href='#' id='lnkTeam'>Manage team</a>":"");
     $("authBar").className="authbar";
     var so=$("lnkSignout"); if(so) so.addEventListener("click",function(e){e.preventDefault();doSignOut();});
     var tm=$("lnkTeam"); if(tm) tm.addEventListener("click",function(e){e.preventDefault();openTeam();});
@@ -1902,37 +2311,54 @@ $("btnTeamBack").addEventListener("click",function(){initHome();});
 async function renderTeam(){
   var box=$("teamList"), msg=$("teamMsg"); msg.textContent=""; box.innerHTML="Loading...";
   if(!loggedIn()){box.innerHTML="Sign in first.";return;}
-  var r=await sb.from("profiles").select("id,email,name,role").order("created_at",{ascending:true});
+  var r=await sb.from("profiles").select("id,email,name,role,username").order("created_at",{ascending:true});
   if(r.error){box.innerHTML="";msg.className="msg err";msg.textContent=r.error.message;return;}
-  box.innerHTML="";
-  (r.data||[]).forEach(function(p){
-    var row=document.createElement("div");row.className="teamrow";
+  var rows=r.data||[];
+  if(!rows.length){ box.innerHTML="<p class='muted'>No team members yet.</p>"; return; }
+  var wrap=document.createElement("div"); wrap.style.cssText="overflow-x:auto";
+  var tbl=document.createElement("table"); tbl.className="teamtab";
+  tbl.innerHTML="<thead><tr><th>No</th><th>Name</th><th>E-mail Address</th><th>Username</th><th>Role</th><th>Questionnaire</th><th>Photo Verification</th></tr></thead>";
+  var tb=document.createElement("tbody");
+  rows.forEach(function(p,idx){
     var isMe=(me&&p.id===me.id);
-    row.innerHTML="<div class='info'><b class='tn'>"+esc(p.name||"(no name)")+"</b>"+(isMe?" <span class='muted'>(you)</span>":"")+"<br><span class='muted'>"+esc(p.email||"")+"</span></div>";
-    // Owner can set/fix a member's name (needed for people who signed up before names were required).
-    var nameWrap=document.createElement("div"); nameWrap.style.cssText="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap";
-    var ni=document.createElement("input"); ni.type="text"; ni.value=p.name||""; ni.placeholder="Full name (First [Middle] Last)"; ni.style.cssText="flex:1;min-width:150px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:13px";
-    var nb=document.createElement("button"); nb.type="button"; nb.className="btn small proceed"; nb.style.width="auto"; nb.textContent="Save name";
-    nb.addEventListener("click",async function(){ var nm=ni.value.trim(); if(!nm){msg.className="msg err";msg.textContent="Enter a name.";return;} msg.textContent="Saving...";msg.className="msg"; var u=await sb.from("profiles").update({name:nm}).eq("id",p.id); if(u.error){msg.className="msg err";msg.textContent=u.error.message;} else { p.name=nm; row.querySelector(".tn").textContent=nm; if(isMe){me.name=nm;inspector=firstNameOf(nm);save(LS.insp,inspector);} msg.className="msg ok";msg.textContent="Saved name: "+nm; } });
-    nameWrap.appendChild(ni); nameWrap.appendChild(nb); row.appendChild(nameWrap);
-    var sel=document.createElement("select");
+    var tr=document.createElement("tr");
+    var tdNo=document.createElement("td"); tdNo.textContent=(idx+1); tr.appendChild(tdNo);
+    // Name (editable — owner fixes names for old accounts; saving regenerates the username)
+    var tdName=document.createElement("td");
+    var ni=document.createElement("input"); ni.type="text"; ni.className="tcell-in"; ni.value=p.name||""; ni.placeholder="First [Middle] Last"; tdName.appendChild(ni);
+    if(isMe){ var meTag=document.createElement("div"); meTag.className="muted"; meTag.style.fontSize="11px"; meTag.textContent="(you)"; tdName.appendChild(meTag); }
+    tr.appendChild(tdName);
+    var tdEmail=document.createElement("td"); tdEmail.textContent=p.email||""; tdEmail.style.fontSize="12px"; tr.appendChild(tdEmail);
+    var tdUser=document.createElement("td"); var uspan=document.createElement("span"); uspan.className="uname"; uspan.textContent=p.username||"—"; tdUser.appendChild(uspan); tr.appendChild(tdUser);
+    ni.addEventListener("change",async function(){ var nm=ni.value.trim(); if(!nm||nm===p.name) return; msg.className="msg"; msg.textContent="Saving...";
+      var u=await sb.from("profiles").update({name:nm}).eq("id",p.id);
+      if(u.error){ msg.className="msg err"; msg.textContent=u.error.message; return; }
+      p.name=nm; if(isMe){ me.name=nm; inspector=firstNameOf(nm); save(LS.insp,inspector); }
+      msg.className="msg ok"; msg.textContent="Saved name for "+esc(nm)+" (username stays the same)."; });
+    // Role
+    var tdRole=document.createElement("td"); var sel=document.createElement("select"); sel.className="tcell-in";
     ["member","admin","owner"].forEach(function(role){var o=document.createElement("option");o.value=role;o.textContent=role;if(p.role===role)o.selected=true;sel.appendChild(o);});
-    sel.addEventListener("change",async function(){
-      msg.textContent="Saving...";msg.className="msg";
+    sel.addEventListener("change",async function(){ msg.textContent="Saving...";msg.className="msg";
       var u=await sb.from("profiles").update({role:sel.value}).eq("id",p.id);
       if(u.error){msg.className="msg err";msg.textContent=u.error.message; sel.value=p.role;}
-      else{p.role=sel.value;msg.className="msg ok";msg.textContent="Updated "+esc(p.name||p.email)+" → "+sel.value;}
-    });
-    row.appendChild(sel);
-    // Owner marks who may skip the questionnaire without a password.
-    var exWrap=document.createElement("label"); exWrap.style.cssText="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px";
-    var ex=document.createElement("input"); ex.type="checkbox"; ex.style.width="auto"; ex.checked=isQExempt(p.id);
-    ex.addEventListener("change",async function(){ if(ex.checked){ if(qexempt.indexOf(p.id)<0) qexempt.push(p.id); } else { qexempt=qexempt.filter(function(x){return x!==p.id;}); } msg.className="msg"; msg.textContent="Saving..."; await pushQExempt(); msg.className="msg ok"; msg.textContent=(ex.checked?"Exempted ":"Un-exempted ")+esc(p.name||p.email)+" from the questionnaire."; });
-    exWrap.appendChild(ex); exWrap.appendChild(document.createTextNode("Questionnaire optional (can skip without password)"));
-    row.appendChild(exWrap);
-    box.appendChild(row);
+      else{p.role=sel.value;msg.className="msg ok";msg.textContent="Updated "+esc(p.name||p.email)+" → "+sel.value;} });
+    tdRole.appendChild(sel); tr.appendChild(tdRole);
+    // Questionnaire (ticked = may skip questionnaire without a password)
+    var tdQ=document.createElement("td"); tdQ.style.textAlign="center";
+    var qx=document.createElement("input"); qx.type="checkbox"; qx.checked=isQExempt(p.id);
+    qx.addEventListener("change",async function(){ if(qx.checked){ if(qexempt.indexOf(p.id)<0) qexempt.push(p.id);} else { qexempt=qexempt.filter(function(x){return x!==p.id;}); } msg.className="msg"; msg.textContent="Saving..."; await pushQExempt(); msg.className="msg ok"; msg.textContent=(qx.checked?"Questionnaire optional for ":"Questionnaire required for ")+esc(p.name||p.email)+"."; });
+    tdQ.appendChild(qx); tr.appendChild(tdQ);
+    // Photo Verification (ticked = must do selfie + GPS check-in)
+    var tdP=document.createElement("td"); tdP.style.textAlign="center";
+    var cx=document.createElement("input"); cx.type="checkbox"; cx.checked=requiresCheckin(p.id);
+    cx.addEventListener("change",async function(){ if(cx.checked){ if(checkinReq.indexOf(p.id)<0) checkinReq.push(p.id);} else { checkinReq=checkinReq.filter(function(x){return x!==p.id;}); } msg.className="msg"; msg.textContent="Saving..."; await pushCheckinReq(); msg.className="msg ok"; msg.textContent=(cx.checked?"Check-in required for ":"Check-in off for ")+esc(p.name||p.email)+"."; });
+    tdP.appendChild(cx); tr.appendChild(tdP);
+    tb.appendChild(tr);
   });
-  if(!(r.data||[]).length) box.innerHTML="<p class='muted'>No team members yet.</p>";
+  tbl.appendChild(tb); wrap.appendChild(tbl); box.innerHTML=""; box.appendChild(wrap);
+  var lg=document.createElement("p"); lg.className="muted"; lg.style.cssText="font-size:11px;margin-top:8px;line-height:1.5";
+  lg.innerHTML="<b>Username</b> is generated once at sign-up and stays fixed (editing a name does not change it). <b>Questionnaire</b> ticked = that person may skip the questionnaire without a password. <b>Photo Verification</b> ticked = that person must take a selfie + GPS check-in at start &amp; submit.";
+  box.appendChild(lg);
 }
 
 /* ============ Settings ============ */
