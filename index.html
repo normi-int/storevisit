@@ -455,7 +455,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31aa</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ac</div>
 </div>
 
 <script>
@@ -861,6 +861,8 @@ function findKey(){var b=$("selBrand").value,c=$("selCity").value,o=$("selOutlet
 function sharedWithMe(s){ return !!(loggedIn() && s && s.shared_with && me && s.shared_with.indexOf(me.id)>=0); }
 function isCreator(s){ if(!loggedIn()) return true; return (s.user_id===me.id) || !s.user_id; }
 function isCoInspector(s){ return loggedIn() && s && s.user_id && s.user_id!==me.id && sharedWithMe(s); }
+function isShared(s){ return !!(s && ((s.shared_with&&s.shared_with.length)||(s.coInspectors&&s.coInspectors.length))); }
+function isSharedParticipant(s){ return isShared(s) && loggedIn() && (isCreator(s)||isCoInspector(s)); }
 function inspectorsOf(s){ var a=[s.inspector].concat((s.coInspectors||[]).map(function(c){return c.first;})); return a.filter(Boolean).sort(function(x,y){return (x||"").localeCompare(y||"");}); }
 function othersOf(s){ var mineFirst=(loggedIn()?firstNameOf(me.name):inspector); return inspectorsOf(s).filter(function(n){return n!==mineFirst;}); }
 function mineOnly(s){ if(isStaff()) return true; if(loggedIn()) return (s.user_id===me.id)||sharedWithMe(s)||(!s.user_id&&s.inspector===firstNameOf(me.name)); return true; }
@@ -1261,7 +1263,7 @@ function buildFindingRow(item,num,pinned){
   var photos=photosOf(item).map(function(p){return "<img src='"+p+"'>";}).join("");
   var handle=pinned?"<div class='draghandle pinnedlock' title='High priority — pinned to top'>📌</div>":"<div class='draghandle' title='Drag to reorder'>☰</div>";
   row.innerHTML=handle+"<div class='no'>"+num+"</div><div class='body'>"+menu+"<div class='txt'>"+esc(item.text||"(photo only)")+"</div>"+(item.solution?"<div class='muted' style='margin-top:4px'>💡 <b>Solution:</b> "+esc(item.solution)+"</div>":"")+"<div class='tags'>"+prio+issueTag+kindTag+tags+"</div><div class='factions'><button type='button' class='fbtn edit' style='color:#3b2314;border-color:#3b2314'>✎ Edit</button><button type='button' class='fbtn del' style='color:#9b0a0a;border-color:#9b0a0a'>✕ Remove</button></div></div>"+(photos?"<div class='fphoto'>"+photos+"</div>":"");
-  row.querySelector(".edit").addEventListener("click",function(){ var i=current.findings.indexOf(item); if(i>=0) startEditFinding(i); });
+  row.querySelector(".edit").addEventListener("click",function(){ var i=current.findings.indexOf(item); if(i>=0){ openVisit(current); startEditFinding(i); } });
   row.querySelector(".del").addEventListener("click",function(){ var i=current.findings.indexOf(item); if(i<0)return; if(confirm("Remove this entry permanently? This cannot be undone.")){ var rmf=current.findings[i]; current.deleted=current.deleted||{}; if(rmf&&rmf.uid) current.deleted[rmf.uid]=Date.now(); current.findings.splice(i,1); current.updated=Date.now(); current.synced=false; renderFindings(); updateDeptSummary(); persist(); refreshPreviewPaper(); } });
   return row;
 }
@@ -1421,27 +1423,31 @@ function openReport(s){
   var staff=(isStaff()&&loggedIn());
   var member=(loggedIn()&&!isStaff());
   var openMode=(s.status!=="done");
+  var coi=isCoInspector(s);
+  // Editable when: in-progress preview, OR owner/admin within their window, OR a shared-visit
+  // participant (initiator or co-inspector) within 7 days — so a shared report can be fixed together.
+  var editable=(openMode || canEdit(s) || (isSharedParticipant(s) && withinDays(s.date,7)));
   $("reportActionsOpen").classList.toggle("hide", !openMode);   // in-progress preview
   $("reportActionsDone").classList.toggle("hide", openMode);    // finished report
-  $("findingsEditCard").classList.toggle("hide", !openMode);   // reorder/edit/remove only in preview
-  if(openMode){
-    var sharedP=((s.shared_with&&s.shared_with.length)||(s.coInspectors&&s.coInspectors.length));
-    if(loggedIn()&&sharedP){ pullMerge(s).then(function(ch){ if(ch && current===s && !$("reportView").classList.contains("hide")){ renderFindings(); refreshPreviewPaper(); } }); }
+  $("findingsEditCard").classList.toggle("hide", !editable);    // reorder/edit/remove list
+  if(editable){
+    if(loggedIn()&&isShared(s)){ pullMerge(s).then(function(ch){ if(ch && current===s && !$("reportView").classList.contains("hide")){ renderFindings(); refreshPreviewPaper(); } }); }
     renderFindings();
-    var coi=isCoInspector(s);
+  }
+  $("summaryEditRow").classList.toggle("hide", coi || !editable);   // co-inspectors never edit the summary; only editors see it
+  if(openMode){
     var submitted=!!s.scoreSubmitted, pv=$("btnPvDone");
     pv.textContent = submitted ? "Done — end visit & record departure" : "Proceed to questionnaire →";
     pv.className = "btn proceed";
     pv.style.background = "";
     // Co-inspectors add/edit entries only; the initiator does summary, questionnaire & finish.
-    $("summaryEditRow").classList.toggle("hide", coi);
     pv.classList.toggle("hide", coi);
     $("btnPvCancel").classList.toggle("hide", coi);
   }
   $("btnDeleteReport").classList.toggle("hide", !staff);
   // members: request-deletion only for FINISHED reports
   $("btnRequestDelete").classList.toggle("hide", !(member && s.status==="done"));
-  $("btnEditReport").classList.toggle("hide", !canEdit(s));
+  $("btnEditReport").classList.toggle("hide", !editable);   // add-new-entries also available to shared participants
   show("reportView");
 }
 $("btnPvBack").addEventListener("click",function(){ renderLists(); $("barSub").textContent=""; show("homeView"); });
