@@ -227,6 +227,7 @@
       <div class="msg" id="authMsg"></div>
       <div class="spacer"></div>
       <button class="btn ghost" id="btnAuthToggle">New here? Create an account</button>
+      <div id="authHelp" style="text-align:center;margin-top:8px;font-size:13px"><a href="#" id="lnkForgotUser">Forgot my username</a> &nbsp;·&nbsp; <a href="#" id="lnkForgotPass">Forgot my password</a></div>
       <div class="spacer"></div>
       <button class="btn grey small" id="btnAuthSettings">⚙ Cloud not set up yet? Open Setup</button>
     </div>
@@ -469,6 +470,27 @@
     </div>
   </div>
 
+  <!-- ============ INFO POPUP (account details, etc.) ============ -->
+  <div id="infoModal" class="hide" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;display:flex;align-items:flex-start;justify-content:center;padding:36px 14px;overflow:auto">
+    <div class="card" style="max-width:440px;width:100%;margin:0;position:relative">
+      <button id="infoClose" title="Close" style="position:absolute;top:8px;right:8px;width:34px;height:34px;border:none;border-radius:999px;background:#eee;color:#333;font-size:20px;line-height:1;cursor:pointer">×</button>
+      <h2 class="section" id="infoTitle" style="padding-right:36px">Account</h2>
+      <div id="infoBody" style="font-size:14px;line-height:1.6"></div>
+    </div>
+  </div>
+
+  <!-- ============ FORM POPUP (forgot username / password) ============ -->
+  <div id="formModal" class="hide" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;display:flex;align-items:flex-start;justify-content:center;padding:36px 14px;overflow:auto">
+    <div class="card" style="max-width:440px;width:100%;margin:0;position:relative">
+      <button id="fmClose" title="Close" style="position:absolute;top:8px;right:8px;width:34px;height:34px;border:none;border-radius:999px;background:#eee;color:#333;font-size:20px;line-height:1;cursor:pointer">×</button>
+      <h2 class="section" id="fmTitle" style="padding-right:36px">—</h2>
+      <p class="muted" id="fmSub" style="font-size:13px;margin-bottom:10px"></p>
+      <div id="fmFields"></div>
+      <div class="msg" id="fmMsg"></div>
+      <button class="btn proceed" id="fmGo" style="width:100%;margin-top:6px">Submit</button>
+    </div>
+  </div>
+
   <!-- ============ TEAM (owner) ============ -->
   <section id="teamView" class="hide">
     <div class="card">
@@ -543,7 +565,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ak</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31al</div>
 </div>
 
 <script>
@@ -750,6 +772,9 @@ var OUTLET_COORDS={              // baked-in coords "Brand|City|Outlet": {lat,ln
 };
 var outletCoords={};            // cloud override (app_config "outletcoords")
 function requiresCheckin(id){ return !!(id && checkinReq.indexOf(id)>=0); }
+// Members always check in; owner/admin only if explicitly flagged.
+function mustCheckinRole(role,id){ return role==="member" || requiresCheckin(id); }
+function meMustCheckin(){ return !!(loggedIn() && me && mustCheckinRole(me.role, me.id)); }
 function coordKey(s){ return (s.brand||"")+"|"+(s.city||"")+"|"+(s.outlet||""); }
 function outletCoordFor(s){ if(!s) return null; var k=coordKey(s); return outletCoords[k]||OUTLET_COORDS[k]||null; }
 function haversine(la1,lo1,la2,lo2){ var R=6371000,t=Math.PI/180; var dLa=(la2-la1)*t,dLo=(lo2-lo1)*t; var a=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(la1*t)*Math.cos(la2*t)*Math.sin(dLo/2)*Math.sin(dLo/2); return Math.round(2*R*Math.asin(Math.sqrt(a))); }
@@ -952,6 +977,7 @@ function renderAuthMode(){
   $("nameRow").style.display = authMode==="signup"?"block":"none";
   $("emailRow").style.display = authMode==="signup"?"block":"none";   // email only at sign-up
   $("userRow").style.display  = authMode==="signup"?"none":"block";   // username only at sign-in
+  $("authHelp").style.display = authMode==="signup"?"none":"block";   // forgot links only at sign-in
   var nl=$("authNoLast"); if(nl){ $("authLast").disabled=nl.checked; if(nl.checked)$("authLast").value=""; }
   $("btnAuthGo").textContent = authMode==="signup"?"Create account":"Sign in";
   $("btnAuthToggle").textContent = authMode==="signup"?"Already have an account? Sign in":"New here? Create an account";
@@ -983,8 +1009,8 @@ $("btnAuthGo").addEventListener("click",async function(){
         if(si.error){ msg.className="msg ok"; msg.textContent="Account created. Check your email to confirm, then sign in with your username."; authMode="signin"; renderAuthMode(); return; }
       }
       await afterLogin();
-      // show the person their generated username after first sign-up
-      if(me&&me.username){ alert("Your username is:  "+me.username+"\n\nUse this username (not your email) to sign in from now on."); }
+      // show the person their account details after first sign-up
+      if(me){ showAccountDetail(me, "Hello "+esc(firstNameOf(me.name)||"there")+" 👋", "Here's your account detail:"); }
       return;
     } else {
       var uname=$("authUser").value.trim();
@@ -1010,6 +1036,85 @@ async function doSignOut(){
   me=null;
   show("loginView"); renderAuthMode();
 }
+
+/* ============ Info popup + account details ============ */
+var infoOnClose=null;
+function showInfo(title, html, onClose){ $("infoTitle").innerHTML=title; $("infoBody").innerHTML=html; infoOnClose=onClose||null; $("infoModal").classList.remove("hide"); }
+function closeInfo(){ $("infoModal").classList.add("hide"); var f=infoOnClose; infoOnClose=null; if(f) f(); }
+$("infoClose").addEventListener("click",closeInfo);
+$("infoModal").addEventListener("click",function(e){ if(e.target===this) closeInfo(); });
+function showAccountDetail(u, title, lead){
+  var body = (lead?"<p style='margin:0 0 8px'>"+esc(lead)+"</p>":"")+
+    "<div style='background:#f7f7f9;border:1px solid var(--line);border-radius:10px;padding:12px;margin:6px 0'>"+
+      "<div><b>E-mail:</b> "+esc(u.email||"—")+"</div>"+
+      "<div style='margin-top:4px'><b>Username:</b> <span style='font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;font-size:16px'>"+esc(u.username||"—")+"</span></div>"+
+    "</div>"+
+    "<p style='margin:8px 0 0'>Use this <b>username</b> to log in from now on.</p>"+
+    "<p style='margin:8px 0 0;color:#9b0a0a;font-weight:600'>📸 Please screenshot this screen and save the details.</p>";
+  showInfo(title||"Your account", body);
+}
+
+/* ============ Forgot username / password ============ */
+var fmSubmit=null;
+function openForm(o){
+  $("fmTitle").textContent=o.title||""; $("fmSub").textContent=o.sub||""; $("fmSub").style.display=o.sub?"block":"none";
+  $("fmMsg").textContent=""; $("fmMsg").className="msg"; $("fmGo").textContent=o.submitLabel||"Submit";
+  var box=$("fmFields"); box.innerHTML="";
+  (o.fields||[]).forEach(function(f){
+    var row=document.createElement("div"); row.className="row";
+    var lab=document.createElement("label"); lab.textContent=f.label; row.appendChild(lab);
+    var inp=document.createElement("input"); inp.type=f.type||"text"; inp.id="fm_"+f.key; inp.autocomplete="off"; inp.autocapitalize="none"; row.appendChild(inp);
+    box.appendChild(row);
+  });
+  fmSubmit=o.onSubmit; $("formModal").classList.remove("hide");
+  var first=box.querySelector("input"); if(first) first.focus();
+}
+function closeForm(){ $("formModal").classList.add("hide"); fmSubmit=null; }
+$("fmClose").addEventListener("click",closeForm);
+$("formModal").addEventListener("click",function(e){ if(e.target===this) closeForm(); });
+$("fmGo").addEventListener("click",async function(){
+  if(!fmSubmit) return;
+  var vals={}; $("fmFields").querySelectorAll("input").forEach(function(i){ vals[i.id.slice(3)]=i.value; });
+  var msg=$("fmMsg"); msg.className="msg"; msg.textContent="Please wait...";
+  try{ var r=await fmSubmit(vals); if(r&&r.error){ msg.className="msg err"; msg.textContent=r.error; } else { var done=(r&&r.done); closeForm(); if(done) done(); } }
+  catch(e){ msg.className="msg err"; msg.textContent=(e&&e.message)||String(e); }
+});
+function forgotUsername(){
+  if(!sb){ alert("Cloud not set up yet."); return; }
+  openForm({ title:"Forgot my username", sub:"Confirm your email and password to see your username.",
+    fields:[{key:"email",label:"Email",type:"email"},{key:"pass",label:"Password",type:"password"}],
+    submitLabel:"Show my username",
+    onSubmit:async function(v){
+      if(!v.email||!v.pass) return {error:"Enter your email and password."};
+      var r=await sb.auth.signInWithPassword({email:(v.email||"").trim(),password:v.pass});
+      if(r.error) return {error:"Email or password is incorrect."};
+      await loadProfile();
+      var first=firstNameOf(me&&me.name)||"there";
+      return {done:function(){
+        showInfo("Hello "+esc(first)+" 👋",
+          "Your username is:<div style='font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;font-size:22px;margin:8px 0'>"+esc(me.username||"—")+"</div>"+
+          "Please keep this detail somewhere safe — you'll use it to sign in from now on."+
+          "<p style='margin:8px 0 0;color:#9b0a0a;font-weight:600'>📸 Please screenshot this screen and save the details.</p>",
+          function(){ afterLogin(); });
+      }};
+    }});
+}
+function forgotPassword(){
+  if(!sb){ alert("Cloud not set up yet."); return; }
+  openForm({ title:"Forgot my password", sub:"Confirm your email and username, then set a new password.",
+    fields:[{key:"email",label:"Email",type:"email"},{key:"username",label:"Username",type:"text"},{key:"newpass",label:"New password",type:"password"}],
+    submitLabel:"Set new password",
+    onSubmit:async function(v){
+      if(!v.email||!v.username||!v.newpass) return {error:"Fill in all three fields."};
+      if((v.newpass||"").length<6) return {error:"New password must be at least 6 characters."};
+      var r=await sb.rpc("reset_password",{p_email:(v.email||"").trim(),p_username:(v.username||"").trim(),p_new:v.newpass});
+      if(r.error) return {error:r.error.message||"Could not reset the password."};
+      if(!r.data) return {error:"That email + username don't match any account."};
+      return {done:function(){ showInfo("Password updated ✓","You can now sign in with your <b>username</b> and your new password."); }};
+    }});
+}
+$("lnkForgotUser").addEventListener("click",function(e){ e.preventDefault(); forgotUsername(); });
+$("lnkForgotPass").addEventListener("click",function(e){ e.preventDefault(); forgotPassword(); });
 
 /* ============ Home ============ */
 function fillBrands(){var s=$("selBrand");s.innerHTML="<option value=''>-- choose brand --</option>";cfg.brands.forEach(function(b){var o=document.createElement("option");o.value=b.name;o.textContent=b.name;s.appendChild(o);});}
@@ -1183,11 +1288,11 @@ $("btnStart").addEventListener("click",function(){
   if(!inspector){if(!confirm("You haven't entered your name. Continue anyway?"))return;}
   var ex=sessions.find(matchKeyFn(k));
   if(ex){ex.status="open";if(!ex.inspector&&inspector)ex.inspector=inspector;if(!ex.user_id&&me)ex.user_id=me.id;
-    if(requiresCheckin(me&&me.id) && !ex.checkinStart){ current=ex; startCheckin("start",function(){ openVisit(ex); }); return; }
+    if(meMustCheckin() && !ex.checkinStart){ current=ex; startCheckin("start",function(){ openVisit(ex); }); return; }
     openVisit(ex);return;}
   var sess={id:uid(),user_id:(me?me.id:null),inspector:inspector||"",brand:k.brand,city:k.city,outlet:k.outlet,date:k.date,arrival:$("inpArrival").value||nowHM(),departure:"",status:"open",findings:[],shared_with:[],coInspectors:[],created:Date.now(),updated:Date.now(),synced:false};
   sessions.push(sess);persist();
-  if(requiresCheckin(me&&me.id)){ current=sess; startCheckin("start",function(){ openVisit(sess); }); return; }
+  if(meMustCheckin()){ current=sess; startCheckin("start",function(){ openVisit(sess); }); return; }
   openVisit(sess);
 });
 /* ===== Invite co-inspectors (shared visit) ===== */
@@ -1847,7 +1952,7 @@ function doFinish(){
   if(!current) return;
   // check the summary rule BEFORE the selfie, so nobody takes a photo then gets bounced
   if(summaryRequired()){ var sm=(current.summary||"").trim(); if(sm.length<SUMMARY_MIN){ alert("A summary of at least "+SUMMARY_MIN+" characters is required before finishing (currently "+sm.length+")."); show("reportView"); updateSummaryHint(); var el=$("reportSummary"); if(el){ el.focus(); if(el.scrollIntoView) el.scrollIntoView({block:"center"}); } return; } }
-  if(requiresCheckin(me&&me.id) && !current.checkinDone){ startCheckin("done", function(){ finishVisit(); }); return; }
+  if(meMustCheckin() && !current.checkinDone){ startCheckin("done", function(){ finishVisit(); }); return; }
   finishVisit();
 }
 var SUMMARY_MIN=50;
@@ -2341,16 +2446,17 @@ async function renderTeam(){
     sel.addEventListener("change",async function(){ msg.textContent="Saving...";msg.className="msg";
       var u=await sb.from("profiles").update({role:sel.value}).eq("id",p.id);
       if(u.error){msg.className="msg err";msg.textContent=u.error.message; sel.value=p.role;}
-      else{p.role=sel.value;msg.className="msg ok";msg.textContent="Updated "+esc(p.name||p.email)+" → "+sel.value;} });
+      else{p.role=sel.value; cx.disabled=(sel.value==="member"); cx.checked=mustCheckinRole(sel.value,p.id); cx.title=(sel.value==="member")?"Members always take a selfie + GPS check-in":""; msg.className="msg ok";msg.textContent="Updated "+esc(p.name||p.email)+" → "+sel.value;} });
     tdRole.appendChild(sel); tr.appendChild(tdRole);
     // Questionnaire (ticked = may skip questionnaire without a password)
     var tdQ=document.createElement("td"); tdQ.style.textAlign="center";
     var qx=document.createElement("input"); qx.type="checkbox"; qx.checked=isQExempt(p.id);
     qx.addEventListener("change",async function(){ if(qx.checked){ if(qexempt.indexOf(p.id)<0) qexempt.push(p.id);} else { qexempt=qexempt.filter(function(x){return x!==p.id;}); } msg.className="msg"; msg.textContent="Saving..."; await pushQExempt(); msg.className="msg ok"; msg.textContent=(qx.checked?"Questionnaire optional for ":"Questionnaire required for ")+esc(p.name||p.email)+"."; });
     tdQ.appendChild(qx); tr.appendChild(tdQ);
-    // Photo Verification (ticked = must do selfie + GPS check-in)
+    // Photo Verification (ticked = must do selfie + GPS check-in). Members are always on (automatic).
     var tdP=document.createElement("td"); tdP.style.textAlign="center";
-    var cx=document.createElement("input"); cx.type="checkbox"; cx.checked=requiresCheckin(p.id);
+    var cx=document.createElement("input"); cx.type="checkbox"; cx.checked=mustCheckinRole(p.role,p.id); cx.disabled=(p.role==="member");
+    if(p.role==="member") cx.title="Members always take a selfie + GPS check-in";
     cx.addEventListener("change",async function(){ if(cx.checked){ if(checkinReq.indexOf(p.id)<0) checkinReq.push(p.id);} else { checkinReq=checkinReq.filter(function(x){return x!==p.id;}); } msg.className="msg"; msg.textContent="Saving..."; await pushCheckinReq(); msg.className="msg ok"; msg.textContent=(cx.checked?"Check-in required for ":"Check-in off for ")+esc(p.name||p.email)+"."; });
     tdP.appendChild(cx); tr.appendChild(tdP);
     tb.appendChild(tr);
