@@ -455,7 +455,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ac</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ad</div>
 </div>
 
 <script>
@@ -706,7 +706,9 @@ function applyTomb(findings,tomb){ tomb=tomb||{}; return (findings||[]).filter(f
 function mergeVisit(srv,sess){
   var live=unionFindings(srv.findings, sess.findings);
   var tomb=mergeTomb(srv.deleted, sess.deleted);
-  return { findings:applyTomb(live,tomb), deleted:tomb, shared_with:unionIds(srv.shared_with,sess.shared_with), coInspectors:unionCo(srv.coInspectors,sess.coInspectors) };
+  var localNewer=((sess.summaryM||0) >= (srv.summaryM||0));   // summary: whoever typed last wins (co-inspectors can write it too)
+  return { findings:applyTomb(live,tomb), deleted:tomb, shared_with:unionIds(srv.shared_with,sess.shared_with), coInspectors:unionCo(srv.coInspectors,sess.coInspectors),
+           summary:(localNewer? sess.summary : srv.summary), summaryM:Math.max(sess.summaryM||0, srv.summaryM||0) };
 }
 // Read-only pull: fetch the server copy of a SHARED visit and merge it into the local one
 // (so teammates' new/edited/deleted entries appear without having to Save first).
@@ -717,7 +719,8 @@ async function pullMerge(sess){
   var iAmOwner=(sess.user_id===me.id)||!sess.user_id;
   var mg=mergeVisit(srv,sess);
   sess.findings=mg.findings; sess.deleted=mg.deleted; sess.shared_with=mg.shared_with; sess.coInspectors=mg.coInspectors;
-  if(!iAmOwner){ sess.scores=srv.scores||sess.scores; sess.scoreNotes=srv.scoreNotes||sess.scoreNotes; sess.summary=srv.summary; sess.scoreSubmitted=srv.scoreSubmitted; sess.scoreSkipped=srv.scoreSkipped; sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
+  sess.summary=mg.summary; sess.summaryM=mg.summaryM;   // summary is collaborative (newest wins)
+  if(!iAmOwner){ sess.scores=srv.scores||sess.scores; sess.scoreNotes=srv.scoreNotes||sess.scoreNotes; sess.scoreSubmitted=srv.scoreSubmitted; sess.scoreSkipped=srv.scoreSkipped; sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
   persist(); return true;
 }
 async function pushOnce(sess){
@@ -733,15 +736,15 @@ async function pushOnce(sess){
       if(srv){
         var mg=mergeVisit(srv,sess);
         if(iAmOwner){
-          dataToStore=Object.assign({},sess,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,updated:Date.now()});
+          dataToStore=Object.assign({},sess,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,summary:mg.summary,summaryM:mg.summaryM,updated:Date.now()});
         } else {
-          // co-inspector: keep the owner's scores/summary/status; only contribute merged findings + deletions
-          dataToStore=Object.assign({},srv,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,updated:Date.now()});
+          // co-inspector: keep the owner's questionnaire/status; contribute merged findings, deletions & summary (newest wins)
+          dataToStore=Object.assign({},srv,{findings:mg.findings,deleted:mg.deleted,shared_with:mg.shared_with,coInspectors:mg.coInspectors,summary:mg.summary,summaryM:mg.summaryM,updated:Date.now()});
           ownerId=srv.user_id||ownerId;
         }
-        // reflect the merged result back onto the local copy so everyone's entries show
-        sess.findings=mg.findings; sess.deleted=mg.deleted; sess.shared_with=mg.shared_with; sess.coInspectors=mg.coInspectors;
-        if(!iAmOwner){ sess.scores=srv.scores||sess.scores; sess.scoreNotes=srv.scoreNotes||sess.scoreNotes; sess.summary=srv.summary; sess.scoreSubmitted=srv.scoreSubmitted; sess.scoreSkipped=srv.scoreSkipped; sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
+        // reflect the merged result back onto the local copy so everyone's entries + summary show
+        sess.findings=mg.findings; sess.deleted=mg.deleted; sess.shared_with=mg.shared_with; sess.coInspectors=mg.coInspectors; sess.summary=mg.summary; sess.summaryM=mg.summaryM;
+        if(!iAmOwner){ sess.scores=srv.scores||sess.scores; sess.scoreNotes=srv.scoreNotes||sess.scoreNotes; sess.scoreSubmitted=srv.scoreSubmitted; sess.scoreSkipped=srv.scoreSkipped; sess.status=srv.status||sess.status; sess.departure=srv.departure||sess.departure; sess.deptOrder=srv.deptOrder||sess.deptOrder; sess.everDone=srv.everDone||sess.everDone; }
       } else if(!iAmOwner){
         return {ok:false, needOwner:true};   // owner hasn't created the row yet; co-inspector can't insert
       }
@@ -1423,7 +1426,7 @@ function openReport(s){
   var staff=(isStaff()&&loggedIn());
   var member=(loggedIn()&&!isStaff());
   var openMode=(s.status!=="done");
-  var coi=isCoInspector(s);
+  var notInitiator=(isShared(s) && !isCreator(s));   // any participant who didn't start the shared visit
   // Editable when: in-progress preview, OR owner/admin within their window, OR a shared-visit
   // participant (initiator or co-inspector) within 7 days — so a shared report can be fixed together.
   var editable=(openMode || canEdit(s) || (isSharedParticipant(s) && withinDays(s.date,7)));
@@ -1434,15 +1437,15 @@ function openReport(s){
     if(loggedIn()&&isShared(s)){ pullMerge(s).then(function(ch){ if(ch && current===s && !$("reportView").classList.contains("hide")){ renderFindings(); refreshPreviewPaper(); } }); }
     renderFindings();
   }
-  $("summaryEditRow").classList.toggle("hide", coi || !editable);   // co-inspectors never edit the summary; only editors see it
+  $("summaryEditRow").classList.toggle("hide", !editable);   // anyone who can edit the visit (incl. co-inspectors) can write the summary
   if(openMode){
     var submitted=!!s.scoreSubmitted, pv=$("btnPvDone");
     pv.textContent = submitted ? "Done — end visit & record departure" : "Proceed to questionnaire →";
     pv.className = "btn proceed";
     pv.style.background = "";
-    // Co-inspectors add/edit entries only; the initiator does summary, questionnaire & finish.
-    pv.classList.toggle("hide", coi);
-    $("btnPvCancel").classList.toggle("hide", coi);
+    // Co-inspectors add/edit entries + summary; only the initiator finishes or cancels the visit.
+    pv.classList.toggle("hide", notInitiator);
+    $("btnPvCancel").classList.toggle("hide", notInitiator);
   }
   $("btnDeleteReport").classList.toggle("hide", !staff);
   // members: request-deletion only for FINISHED reports
@@ -1462,8 +1465,8 @@ function updateSummaryHint(){
   if(summaryRequired()){ h.innerHTML="Required — minimum "+SUMMARY_MIN+" characters. <b>"+len+" / "+SUMMARY_MIN+"</b>"+(len>=SUMMARY_MIN?" ✓":""); h.style.color=(len>=SUMMARY_MIN?"var(--green)":"var(--red)"); }
   else { h.innerHTML="Optional. Saved automatically when you click away."; h.style.color=""; }
 }
-$("reportSummary").addEventListener("input",function(){ if(current){ current.summary=this.value; current.updated=Date.now(); current.synced=false; } updateSummaryHint(); });
-$("reportSummary").addEventListener("change",function(){ if(!current)return; current.summary=this.value; $("reportPaper").innerHTML=reportHTML(current); pushSession(current,"Summary saved"); });
+$("reportSummary").addEventListener("input",function(){ if(current){ current.summary=this.value; current.summaryM=Date.now(); current.updated=Date.now(); current.synced=false; } updateSummaryHint(); });
+$("reportSummary").addEventListener("change",function(){ if(!current)return; current.summary=this.value; current.summaryM=Date.now(); $("reportPaper").innerHTML=reportHTML(current); pushSession(current,"Summary saved"); });
 function withinDays(iso,n){ if(!iso) return true; var lim=new Date(iso+"T00:00:00").getTime()+n*86400000; var t=new Date(); t.setHours(0,0,0,0); return t.getTime()<=lim; }
 function canEdit(s){
   if(!loggedIn()) return true;                 // local single-user
