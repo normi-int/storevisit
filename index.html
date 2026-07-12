@@ -141,10 +141,10 @@
   table.rep.detail col.c-q{width:43%}
   table.rep.detail col.c-a{width:15%}
   table.rep.detail col.c-n{width:27%}
-  table.rep.detail tbody{page-break-inside:avoid}   /* keep a whole category together — move it to next page if it would spill */
+  table.rep.detail tbody{page-break-inside:avoid;break-inside:avoid}   /* keep a whole category together — move it to next page if it would spill */
   table.rep th{background:#f1f5f9;font-weight:700;text-align:center}
   table.rep thead{display:table-header-group}
-  table.rep tr{page-break-inside:avoid}
+  table.rep tr{page-break-inside:avoid;break-inside:avoid}
   table.rep td.no{text-align:center;width:36px}table.rep td.ph{width:110px;text-align:center}
   table.rep img{max-width:100px;max-height:90px;border-radius:6px}
   /* --- Summary (page 1) --- */
@@ -177,13 +177,18 @@
   table.rep.detail td.dans{text-align:center}
   @page{size:A4;margin:1.27cm}
   @media print{
-    body{background:#fff;padding:0}header.appbar,.noprint{display:none !important}.wrap{max-width:none;padding:0}
+    @page{ margin:12mm 10mm }
+    html,body{background:#fff;padding:0;margin:0;-webkit-text-size-adjust:100%}
+    header.appbar,.noprint{display:none !important}.wrap{max-width:none;padding:0}
+    /* Force a fresh sheet before every page after the first (modern + legacy for iOS Safari) */
+    .report-page.pgbreak{ break-before:page; page-break-before:always }
+    .report-page{ break-inside:auto; page-break-inside:auto }
     #reportView .report-paper{border:none;border-radius:0;padding:0}
     table.rep th,table.rep td{border:1px solid #333;padding:3px 6px;font-size:11px}
     table.rep img{max-height:70px;max-width:85px}
     .rep-title{font-size:16px}.rep-head{font-size:11.5px;line-height:1.35}.sec-h{font-size:12.5px}.mut-h{font-size:11px}
     .report-page{border-bottom:none;padding-bottom:0;margin-bottom:0}
-    .dept-sec{page-break-inside:auto}.sec-h,.mut-h{page-break-after:avoid}
+    .dept-sec{page-break-inside:auto;break-inside:auto}.sec-h,.mut-h{page-break-after:avoid;break-after:avoid}
     table.sumtab td,table.sumtab th{font-size:12px;padding:3px 8px}
     .final-score .fs-l{font-size:16px}.final-score .fs-n,.final-score .fs-g{font-size:26px}
     .sum-body{font-size:12px}
@@ -191,9 +196,9 @@
     /* Questionnaire detail: compact; flows to a 2nd page if needed (rows never split, header repeats) */
     table.rep.detail th,table.rep.detail td{font-size:9px;padding:1.5px 4px;line-height:1.2}
     table.rep.detail td.dcat{font-size:9px}
-    table.rep.detail{page-break-inside:auto}
+    table.rep.detail{page-break-inside:auto;break-inside:auto}
     table.rep.detail thead{display:table-header-group}
-    table.rep.detail tr{page-break-inside:avoid}
+    table.rep.detail tr{page-break-inside:avoid;break-inside:avoid}
     table.sumtab .sum-banner,table.dept-head-tab .dh-v,table.dept-head-tab .dh-s,table.rep th,table.rep.detail td.dcat{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
 </style>
@@ -220,16 +225,27 @@
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:8px"><input type="checkbox" id="authNoLast" style="width:auto"> I don't have a last name</label>
         <small class="hint">Only your <b>first name</b> is shown as the inspector on reports. Your username is generated automatically.</small>
       </div>
-      <div class="row" id="userRow"><label>Username</label><input type="text" id="authUser" placeholder="e.g. hg26wan0734" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="row" id="userRow"><label>Username</label><input type="text" id="authUser" placeholder="" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
       <div class="row" id="emailRow"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email"></div>
       <div class="row"><label>Password</label><input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password"></div>
       <button class="btn proceed" id="btnAuthGo">Sign in</button>
       <div class="msg" id="authMsg"></div>
-      <div class="spacer"></div>
-      <button class="btn ghost" id="btnAuthToggle">New here? Create an account</button>
-      <div id="authHelp" style="text-align:center;margin-top:8px;font-size:13px"><a href="#" id="lnkForgotUser">Forgot my username</a> &nbsp;·&nbsp; <a href="#" id="lnkForgotPass">Forgot my password</a></div>
+      <div id="authHelp" style="text-align:center;margin-top:12px;font-size:13px"><a href="#" id="lnkForgotUser">Forgot my username</a> &nbsp;·&nbsp; <a href="#" id="lnkForgotPass">Forgot my password</a></div>
+      <p class="muted" style="text-align:center;font-size:12px;margin-top:8px">Accounts are created by your owner/admin. Ask them for an invite link if you don't have an account yet.</p>
       <div class="spacer"></div>
       <button class="btn grey small" id="btnAuthSettings">⚙ Cloud not set up yet? Open Setup</button>
+    </div>
+  </section>
+
+  <!-- ============ SET PASSWORD (invite) ============ -->
+  <section id="setpwView" class="hide">
+    <div class="card">
+      <h2 class="section">Set your password</h2>
+      <p class="muted" id="setpwSub" style="font-size:13px;margin-bottom:10px">Welcome! Create a password for your account. You'll use your <b>username</b> to sign in from now on.</p>
+      <div class="row"><label>New password</label><input type="password" id="setpwNew" autocomplete="new-password" placeholder="at least 6 characters"></div>
+      <div class="row"><label>Confirm password</label><input type="password" id="setpwConfirm" autocomplete="new-password"></div>
+      <div class="msg" id="setpwMsg"></div>
+      <button class="btn proceed" id="setpwGo" style="width:100%">Set password</button>
     </div>
   </section>
 
@@ -265,11 +281,9 @@
       <h2 class="section">Team — everyone's last visits</h2>
       <div id="teamDoneList"></div><p class="muted" id="teamDoneEmpty">No team visits yet.</p>
       <div class="spacer"></div>
-      <button class="btn small proceed noprint" id="btnExcel">⬇ Export / choose reports to download</button>
-      <div class="spacer"></div>
-      <label class="btn small noprint" for="importXlsx" style="display:inline-flex;cursor:pointer;background:#0891b2;color:#fff">🧾 Compiled report from Excel</label>
+      <button class="btn small proceed noprint hide" id="btnExcel">⬇ Export / choose reports to download</button>
+      <label class="btn small noprint hide" for="importXlsx" style="display:none;cursor:pointer;background:#0891b2;color:#fff">🧾 Compiled report from Excel</label>
       <input type="file" id="importXlsx" accept=".xlsx,.csv" class="hide">
-      <small class="hint">Upload an exported (and optionally edited) Excel/CSV to generate a printable summary + details report.</small>
     </div>
   </section>
 
@@ -491,18 +505,6 @@
     </div>
   </div>
 
-  <!-- ============ TEAM (owner) ============ -->
-  <section id="teamView" class="hide">
-    <div class="card">
-      <h2 class="section">Manage team &amp; roles</h2>
-      <p class="muted">Only you (Owner) can change roles. Members see only their own reports; Admins can see &amp; merge everyone's.</p>
-      <div id="teamList"></div>
-      <button class="btn small grey" id="btnTeamRefresh">↻ Refresh</button>
-      <div class="msg" id="teamMsg"></div>
-    </div>
-    <div class="card noprint"><button class="btn back" id="btnTeamBack">← Back to home</button></div>
-  </section>
-
   <!-- ============ DELETE REQUESTS (staff) ============ -->
   <section id="requestsView" class="hide">
     <div class="card">
@@ -534,8 +536,33 @@
 
   <!-- ============ SETTINGS ============ -->
   <section id="settingsView" class="hide">
+    <div class="card hide" id="membersCard">
+      <h2 class="section">👥 Members &amp; access</h2>
+      <p class="muted" style="font-size:13px">Create accounts and share an invite link — the new member sets their own password. You can also set roles, questionnaire/photo rules, and remove people.</p>
+      <div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px;background:#fafafa">
+        <b style="font-size:14px">➕ Invite a new member</b>
+        <div class="two" style="margin-top:8px">
+          <div class="row"><label>First name <span style="color:var(--red)">*</span></label><input type="text" id="invFirst"></div>
+          <div class="row"><label>Last name</label><input type="text" id="invLast"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px"><input type="checkbox" id="invNoLast" style="width:auto"> No last name</label>
+        <div class="row"><label>Email <span class="muted" style="font-weight:400">(optional)</span></label><input type="email" id="invEmail" placeholder="leave blank if none"></div>
+        <button class="btn add" id="btnInviteCreate" style="width:100%">Create invite link</button>
+        <div class="msg" id="invMsg"></div>
+        <div id="invResult" class="hide" style="margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px">
+          <div style="font-size:13px">Username: <b id="invUser" style="font-family:ui-monospace,Menlo,Consolas,monospace"></b></div>
+          <label style="font-size:12px;margin-top:8px;display:block">Invite link — share via WhatsApp:</label>
+          <textarea id="invLink" readonly rows="2" style="width:100%;font-size:12px;box-sizing:border-box"></textarea>
+          <button class="btn small proceed" id="btnCopyInvite" style="width:auto">📋 Copy link</button>
+          <small class="hint">Send this link to the new member. They open it, set a password, and get their login details to screenshot.</small>
+        </div>
+      </div>
+      <div id="teamList"></div>
+      <button class="btn small grey" id="btnTeamRefresh">↻ Refresh list</button>
+      <div class="msg" id="teamMsg"></div>
+    </div>
     <div class="card">
-      <h2 class="section">Cloud connection (Supabase)</h2>
+      <h2 class="section">☁ Cloud connection (Supabase)</h2>
       <label>Project URL</label>
       <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co">
       <div class="spacer"></div>
@@ -565,7 +592,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31al</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31aq</div>
 </div>
 
 <script>
@@ -618,7 +645,7 @@ var me=null;           // {id, email, name, role}
 var authMode="signin"; // or "signup"
 
 var $=function(id){return document.getElementById(id);};
-function show(v){["loginView","homeView","visitView","reportView","editEntriesView","checkinView","teamView","requestsView","scoringView","settingsView"].forEach(function(x){$(x).classList.add("hide");});$(v).classList.remove("hide");window.scrollTo(0,0);}
+function show(v){["loginView","setpwView","homeView","visitView","reportView","editEntriesView","checkinView","requestsView","scoringView","settingsView"].forEach(function(x){$(x).classList.add("hide");});$(v).classList.remove("hide");window.scrollTo(0,0);}
 /* ---- Auth-session hardening: stops silent cloud-sync failures (expired login) ---- */
 var authWarn=false;   // true = last sync couldn't confirm the sign-in (prompt re-login) — but we NEVER auto-clear `me`
 function isAuthError(m){ m=(""+m).toLowerCase(); return /row-level security|jwt|not authenticated|unauthorized|invalid token|refresh token|no api key|401|403/.test(m); }
@@ -734,8 +761,9 @@ var qexempt=[];   // user ids allowed to skip the questionnaire without a passwo
 function isQExempt(id){ return !!(id && qexempt.indexOf(id)>=0); }
 
 /* ===== Site check-in (selfie + GPS) config ===== */
-var checkinReq=[];              // user ids that must do a selfie + GPS check-in at start & submit
-var CHECKIN_RADIUS=150;         // metres: how close counts as "at the store"
+var checkinReq=[];              // owner/admin ids explicitly required to check in
+var checkinOff=[];              // member ids the owner/admin turned check-in OFF for
+var CHECKIN_RADIUS=100;         // metres: how close counts as "at the store"
 var OUTLET_COORDS={              // baked-in coords "Brand|City|Outlet": {lat,lng[,radius]} — verified pins (default radius 150 m)
   "Devon|Surabaya|Pakuwon Mall": {lat:-7.2898536, lng:112.6753665},
   "Hurricane's Grill|Jakarta|Gunawarman": {lat:-6.2361991, lng:106.8073952},
@@ -743,13 +771,13 @@ var OUTLET_COORDS={              // baked-in coords "Brand|City|Outlet": {lat,ln
   "Lo & Behold|Jakarta|Lippo Mall Puri": {lat:-6.1896797, lng:106.7382747},
   "Lo & Behold|Jakarta|The Breeze": {lat:-6.3009453, lng:106.6540872},
   "Toby's Estate|Batam|Grand Batam Mall": {lat:1.1356099, lng:104.0077305},
-  "Toby's Estate|Batam|Hang Nadim Airport": {lat:1.1238305, lng:104.1160331, radius:200},
+  "Toby's Estate|Batam|Hang Nadim Airport": {lat:1.1238305, lng:104.1160331},
   "Toby's Estate|Jakarta|Cilandak Town Square": {lat:-6.2917335, lng:106.8000953},
-  "Toby's Estate|Jakarta|Gandaria City": {lat:-6.2439646, lng:106.7834535, radius:200},
+  "Toby's Estate|Jakarta|Gandaria City": {lat:-6.2439646, lng:106.7834535},
   "Toby's Estate|Jakarta|Gunawarman": {lat:-6.2327387, lng:106.8077476},
-  "Toby's Estate|Jakarta|Hublife": {lat:-6.1805835, lng:106.7924857, radius:200},
-  "Toby's Estate|Jakarta|Kota Kasablanka": {lat:-6.2242354, lng:106.8421781, radius:200},
-  "Toby's Estate|Jakarta|Lippo Mall Nusantara": {lat:-6.2196999, lng:106.814306, radius:200},
+  "Toby's Estate|Jakarta|Hublife": {lat:-6.1805835, lng:106.7924857},
+  "Toby's Estate|Jakarta|Kota Kasablanka": {lat:-6.2242354, lng:106.8421781},
+  "Toby's Estate|Jakarta|Lippo Mall Nusantara": {lat:-6.2196999, lng:106.814306},
   "Toby's Estate|Jakarta|Lippo Mall Puri": {lat:-6.190056, lng:106.7386774},
   "Toby's Estate|Jakarta|Mall Kelapa Gading 3": {lat:-6.1600525, lng:106.9066628},
   "Toby's Estate|Jakarta|Mall of Indonesia": {lat:-6.1503553, lng:106.8910438},
@@ -758,22 +786,22 @@ var OUTLET_COORDS={              // baked-in coords "Brand|City|Outlet": {lat,ln
   "Toby's Estate|Jakarta|Pondok Indah Mall 2": {lat:-6.2647713, lng:106.7830656},
   "Toby's Estate|Jakarta|Senayan Park": {lat:-6.2119798, lng:106.8053892},
   "Toby's Estate|Jakarta|The Breeze": {lat:-6.3015563, lng:106.6533203},
-  "Toby's Estate|Lampung|Lippo Mall Lampung": {lat:-5.4170752, lng:105.2577929, radius:200},
+  "Toby's Estate|Lampung|Lippo Mall Lampung": {lat:-5.4170752, lng:105.2577929},
   "Toby's Estate|Makassar|Trans Studio Makassar": {lat:-5.1596532, lng:119.3940585},
   "Toby's Estate|Medan|Sun Plaza": {lat:3.5819066, lng:98.6717818},
   "Toby's Estate|Palembang|Palembang Indah Mall": {lat:-2.9847876, lng:104.7542919},
-  "Toby's Estate|Semarang|DP Mall": {lat:-6.9830844, lng:110.4122422, radius:200},
+  "Toby's Estate|Semarang|DP Mall": {lat:-6.9830844, lng:110.4122422},
   "Toby's Estate|Semarang|Queen City Mall": {lat:-6.9721483, lng:110.4200207},
   "Toby's Estate|Surabaya|Imam Bonjol": {lat:-7.2850512, lng:112.7377212},
   "Toby's Estate|Surabaya|Pakuwon City Mall": {lat:-7.2759826, lng:112.8056137},
-  "Toby's Estate|Surabaya|Pakuwon Mall": {lat:-7.2903652, lng:112.6730911, radius:200},
+  "Toby's Estate|Surabaya|Pakuwon Mall": {lat:-7.2903652, lng:112.6730911},
   "Toby's Estate|Surabaya|Tunjungan Plaza 5": {lat:-7.261542, lng:112.7396095},
   "Toby's Estate|Yogyakarta|Pakuwon Mall Jogja": {lat:-7.7601891, lng:110.3986037}
 };
 var outletCoords={};            // cloud override (app_config "outletcoords")
 function requiresCheckin(id){ return !!(id && checkinReq.indexOf(id)>=0); }
-// Members always check in; owner/admin only if explicitly flagged.
-function mustCheckinRole(role,id){ return role==="member" || requiresCheckin(id); }
+// Members check in by default (unless owner/admin turned it off for them); owner/admin only if explicitly flagged on.
+function mustCheckinRole(role,id){ return role==="member" ? (checkinOff.indexOf(id)<0) : (checkinReq.indexOf(id)>=0); }
 function meMustCheckin(){ return !!(loggedIn() && me && mustCheckinRole(me.role, me.id)); }
 function coordKey(s){ return (s.brand||"")+"|"+(s.city||"")+"|"+(s.outlet||""); }
 function outletCoordFor(s){ if(!s) return null; var k=coordKey(s); return outletCoords[k]||OUTLET_COORDS[k]||null; }
@@ -794,7 +822,7 @@ async function loadConfigFromCloud(){
   }catch(e){}
   try{
     var rc=await sb.from("app_config").select("data").eq("key","checkin").limit(1);
-    if(!rc.error && rc.data && rc.data.length && rc.data[0].data){ if(Array.isArray(rc.data[0].data.ids)) checkinReq=rc.data[0].data.ids; if(rc.data[0].data.radius) CHECKIN_RADIUS=rc.data[0].data.radius; }
+    if(!rc.error && rc.data && rc.data.length && rc.data[0].data){ var dd=rc.data[0].data; if(Array.isArray(dd.ids)) checkinReq=dd.ids; if(Array.isArray(dd.off)) checkinOff=dd.off; }
   }catch(e){}
   try{
     var ro=await sb.from("app_config").select("data").eq("key","outletcoords").limit(1);
@@ -807,7 +835,7 @@ async function pushConfig(){
 }
 async function pushCheckinReq(){
   if(!(isOwner()&&loggedIn())) return;
-  try{ await sb.from("app_config").upsert({key:"checkin", data:{ids:checkinReq, radius:CHECKIN_RADIUS}, updated:Date.now(), updated_by:(me?me.id:null)}); }catch(e){}
+  try{ await sb.from("app_config").upsert({key:"checkin", data:{ids:checkinReq, off:checkinOff, radius:CHECKIN_RADIUS}, updated:Date.now(), updated_by:(me?me.id:null)}); }catch(e){}
 }
 async function pushQExempt(){
   if(!(isOwner()&&loggedIn())) return;
@@ -979,13 +1007,11 @@ function renderAuthMode(){
   $("userRow").style.display  = authMode==="signup"?"none":"block";   // username only at sign-in
   $("authHelp").style.display = authMode==="signup"?"none":"block";   // forgot links only at sign-in
   var nl=$("authNoLast"); if(nl){ $("authLast").disabled=nl.checked; if(nl.checked)$("authLast").value=""; }
-  $("btnAuthGo").textContent = authMode==="signup"?"Create account":"Sign in";
-  $("btnAuthToggle").textContent = authMode==="signup"?"Already have an account? Sign in":"New here? Create an account";
+  $("btnAuthGo").textContent = "Sign in";
   $("btnAuthSettings").classList.toggle("hide", cloudConfigured());
   updateSetupBtn();
   $("authMsg").textContent="";
 }
-$("btnAuthToggle").addEventListener("click",function(){authMode=authMode==="signup"?"signin":"signup";renderAuthMode();});
 $("authNoLast").addEventListener("change",function(){ $("authLast").disabled=this.checked; if(this.checked)$("authLast").value=""; });
 function firstNameOf(name){ return ((name||"").trim().split(/\s+/)[0])||(name||""); }
 $("btnAuthSettings").addEventListener("click",function(){openSettings();});
@@ -1043,7 +1069,7 @@ function showInfo(title, html, onClose){ $("infoTitle").innerHTML=title; $("info
 function closeInfo(){ $("infoModal").classList.add("hide"); var f=infoOnClose; infoOnClose=null; if(f) f(); }
 $("infoClose").addEventListener("click",closeInfo);
 $("infoModal").addEventListener("click",function(e){ if(e.target===this) closeInfo(); });
-function showAccountDetail(u, title, lead){
+function showAccountDetail(u, title, lead, onClose){
   var body = (lead?"<p style='margin:0 0 8px'>"+esc(lead)+"</p>":"")+
     "<div style='background:#f7f7f9;border:1px solid var(--line);border-radius:10px;padding:12px;margin:6px 0'>"+
       "<div><b>E-mail:</b> "+esc(u.email||"—")+"</div>"+
@@ -1051,7 +1077,7 @@ function showAccountDetail(u, title, lead){
     "</div>"+
     "<p style='margin:8px 0 0'>Use this <b>username</b> to log in from now on.</p>"+
     "<p style='margin:8px 0 0;color:#9b0a0a;font-weight:600'>📸 Please screenshot this screen and save the details.</p>";
-  showInfo(title||"Your account", body);
+  showInfo(title||"Your account", body, onClose);
 }
 
 /* ============ Forgot username / password ============ */
@@ -1115,6 +1141,55 @@ function forgotPassword(){
 }
 $("lnkForgotUser").addEventListener("click",function(e){ e.preventDefault(); forgotUsername(); });
 $("lnkForgotPass").addEventListener("click",function(e){ e.preventDefault(); forgotPassword(); });
+
+/* ============ Invitations (owner/admin create accounts) ============ */
+$("btnInviteCreate").addEventListener("click",async function(){
+  var msg=$("invMsg"); msg.className="msg";
+  if(!(isStaff()&&loggedIn())){ msg.className="msg err"; msg.textContent="Only owner/admin can invite."; return; }
+  var first=$("invFirst").value.trim(), noLast=$("invNoLast").checked, last=noLast?"":$("invLast").value.trim(), email=$("invEmail").value.trim();
+  if(!first){ msg.className="msg err"; msg.textContent="Enter a first name."; return; }
+  if(!last && !noLast){ msg.className="msg err"; msg.textContent="Enter a last name (or tick 'No last name')."; return; }
+  var name=[first,last].filter(Boolean).join(" ");
+  msg.textContent="Creating account...";
+  try{
+    var r=await sb.rpc("create_invite",{p_name:name,p_email:email,p_no_last:noLast});
+    if(r.error) throw r.error;
+    var d=r.data||{};
+    var link=location.origin+location.pathname+"#setpw="+encodeURIComponent(d.token||"");
+    $("invUser").textContent=d.username||"—";
+    $("invLink").value=link;
+    $("invResult").classList.remove("hide");
+    msg.className="msg ok"; msg.textContent="✓ Account created. Copy the link and send it to them.";
+    $("invFirst").value=""; $("invLast").value=""; $("invEmail").value=""; $("invNoLast").checked=false;
+    renderTeam();
+  }catch(e){ msg.className="msg err"; msg.textContent=(e&&e.message)||String(e); }
+});
+$("btnCopyInvite").addEventListener("click",function(){
+  var ta=$("invLink"); ta.focus(); ta.select(); try{ ta.setSelectionRange(0,99999); }catch(e){}
+  var done=function(){ var b=$("btnCopyInvite"), t=b.textContent; b.textContent="✓ Copied"; setTimeout(function(){b.textContent=t;},1500); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand("copy");done();}catch(e){} }); }
+  else { try{document.execCommand("copy");done();}catch(e){} }
+});
+
+/* ============ Invitee: set your password ============ */
+var inviteToken=null;
+function detectInvite(){ var h=location.hash||"", s=location.search||""; var m=h.match(/[#&]setpw=([^&]+)/)||s.match(/[?&]setpw=([^&]+)/); return m?decodeURIComponent(m[1]):null; }
+function openSetPw(){ $("setpwNew").value=""; $("setpwConfirm").value=""; $("setpwMsg").textContent=""; $("barSub").textContent=""; show("setpwView"); }
+$("setpwGo").addEventListener("click",async function(){
+  var a=$("setpwNew").value, b=$("setpwConfirm").value, msg=$("setpwMsg"); msg.className="msg";
+  if(!a||a.length<6){ msg.className="msg err"; msg.textContent="Password must be at least 6 characters."; return; }
+  if(a!==b){ msg.className="msg err"; msg.textContent="The two passwords don't match."; return; }
+  if(!sb){ msg.className="msg err"; msg.textContent="Cloud not available — check your connection."; return; }
+  msg.textContent="Setting your password...";
+  try{
+    var r=await sb.rpc("set_invite_password",{p_token:inviteToken,p_new:a});
+    if(r.error) throw r.error;
+    if(!r.data){ msg.className="msg err"; msg.textContent="This invite link is invalid or was already used."; return; }
+    var acc=r.data; inviteToken=null;
+    try{ history.replaceState(null,"",location.pathname); }catch(e){}
+    showAccountDetail({email:acc.email,username:acc.username}, "Your account is ready 🎉", "Here are your login details:", function(){ authMode="signin"; show("loginView"); renderAuthMode(); var u=$("authUser"); if(u) u.value=acc.username||""; });
+  }catch(e){ msg.className="msg err"; msg.textContent=(e&&e.message)||String(e); }
+});
 
 /* ============ Home ============ */
 function fillBrands(){var s=$("selBrand");s.innerHTML="<option value=''>-- choose brand --</option>";cfg.brands.forEach(function(b){var o=document.createElement("option");o.value=b.name;o.textContent=b.name;s.appendChild(o);});}
@@ -1278,9 +1353,11 @@ function sessCard(s){var d=document.createElement("div");d.className="sesscard";
   var pill=s.status==="done"?"<span class='pill done'>DONE</span>":"<span class='pill open'>OPEN</span>";
   var cloud=s.synced?"<span class='pill cloud'>☁</span>":"<span class='pill local'>device</span>";
   var shared=(s.coInspectors&&s.coInspectors.length);
+  var dlbtn=(s.status==="done" && s.drive_url)?"<button type='button' class='btn small proceed dlbtn' style='width:auto;margin-top:8px;padding:5px 14px'>⬇ Download</button>":"";
   d.innerHTML="<div class='t'>"+esc(s.brand)+" — "+esc(s.outlet)+" "+pill+" "+cloud+"</div>"+
     "<div class='m'>"+esc(s.city)+" · "+fmtDateLong(s.date)+" · "+(s.findings?s.findings.length:0)+" finding(s)"+(inspectorsOf(s).length?" · 👤 "+esc(inspectorsOf(s).join(", ")):"")+"</div>"+
-    (shared?"<div class='m' style='color:#b45309'>🤝 Shared report with "+esc(othersOf(s).join(", ")||"team")+"</div>":"");
+    (shared?"<div class='m' style='color:#b45309'>🤝 Shared report with "+esc(othersOf(s).join(", ")||"team")+"</div>":"")+dlbtn;
+  var db=d.querySelector(".dlbtn"); if(db) db.addEventListener("click",function(e){ e.stopPropagation(); window.open(s.drive_url,"_blank","noopener"); });
   d.addEventListener("click",function(){s.status==="done"?openReport(s):openVisit(s);});return d;}
 
 $("btnStart").addEventListener("click",function(){
@@ -1551,6 +1628,45 @@ function makeGroupSortable(el,gkey){
 }
 function refreshPreviewPaper(){ if(current && $("reportView") && !$("reportView").classList.contains("hide")) $("reportPaper").innerHTML=reportHTML(current); }
 
+/* ===== Archive: build a self-contained HTML of the finished report and store it
+   in the private "reports" bucket. Apps Script mirrors it (HTML + PDF) to Drive. ===== */
+function blobToDataURL(b){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){res(fr.result);}; fr.onerror=rej; fr.readAsDataURL(b); }); }
+async function embedImages(html){
+  var srcs=[], re=/<img[^>]+src=["']([^"']+)["']/g, m;
+  while((m=re.exec(html))){ if(srcs.indexOf(m[1])<0) srcs.push(m[1]); }
+  for(var i=0;i<srcs.length;i++){
+    var u=srcs[i]; if(!u || u.indexOf("data:")===0) continue;
+    try{ var r=await fetch(u); var b=await r.blob(); var d=await blobToDataURL(b); html=html.split(u).join(d); }catch(e){}
+  }
+  return html;
+}
+async function buildArchiveHTML(s){
+  var css=[].slice.call(document.querySelectorAll("style")).map(function(x){return x.textContent;}).join("\n");
+  var inner="<div class='report-paper'>"+reportHTML(s)+"</div>";
+  inner=await embedImages(inner);
+  return "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>"+esc(reportName(s))+"</title><style>"+css+"</style></head><body>"+inner+"</body></html>";
+}
+async function uploadArchive(s){
+  if(!s || !loggedIn() || !sb || !sb.storage) return;
+  try{
+    var html=await buildArchiveHTML(s);
+    var blob=new Blob([html],{type:"text/html"});
+    await sb.storage.from("reports").upload(s.id+".html", blob, {upsert:true, contentType:"text/html"});
+  }catch(e){ /* best-effort; never block finishing a visit */ }
+}
+// Store a check-in selfie in file Storage (keeps the small 500 MB database lean).
+// Returns a URL; falls back to the inline data URL if the upload can't happen.
+async function uploadSelfie(id, phase, dataUrl){
+  try{
+    if(!sb || !sb.storage || !loggedIn() || !dataUrl || dataUrl.indexOf("data:")!==0) return dataUrl;
+    var path=(me?me.id+"/":"")+id+"/checkin-"+phase+"-"+Date.now()+".jpg";
+    var up=await sb.storage.from(BUCKET).upload(path, dataURLtoBlob(dataUrl), {contentType:"image/jpeg", upsert:true});
+    if(up.error) return dataUrl;
+    var pub=sb.storage.from(BUCKET).getPublicUrl(path);
+    return (pub && pub.data && pub.data.publicUrl) || dataUrl;
+  }catch(e){ return dataUrl; }
+}
+
 /* ============ Edit Entries page (own screen + full-edit popup) ============
    Works on a CLONE so nothing touches the live visit until "Save changes"
    (this keeps Discard clean and stops auto-sync from leaking half-done edits). */
@@ -1760,20 +1876,23 @@ function evalCiLoc(){
 }
 function updateCiState(){ $("ciContinue").disabled = !(ciShot && ciPos && ciWithin); }
 $("ciCancel").addEventListener("click",function(){ stopCiCamera(); ciOnPass=null; if(ciPhase==="start"){ current=null; renderLists(); $("barSub").textContent=""; show("homeView"); } else if(current){ openReport(current); } else { show("homeView"); } });
-$("ciContinue").addEventListener("click",function(){
+$("ciContinue").addEventListener("click",async function(){
   if(!(ciShot && ciPos && ciWithin)) return;
+  $("ciContinue").disabled=true; $("ciContinue").textContent="Saving…";
   var co=outletCoordFor(current);
-  var rec={ selfie:ciShot, lat:ciPos.lat, lng:ciPos.lng, acc:ciPos.acc, dist:ciDist, radius:(co?(co.radius||CHECKIN_RADIUS):null), at:Date.now(), time:nowHM(), by:(me?me.name:(inspector||"")) };
+  var selfieUrl=await uploadSelfie(current.id, ciPhase, ciShot);   // store selfie in file Storage, not the database
+  var rec={ selfie:selfieUrl, lat:ciPos.lat, lng:ciPos.lng, acc:ciPos.acc, dist:ciDist, radius:(co?(co.radius||CHECKIN_RADIUS):null), at:Date.now(), time:nowHM(), by:(me?me.name:(inspector||"")) };
   if(ciPhase==="start") current.checkinStart=rec; else current.checkinDone=rec;
   current.updated=Date.now(); current.synced=false; persist();
   stopCiCamera();
+  $("ciContinue").disabled=false; $("ciContinue").textContent="Continue →";
   var cb=ciOnPass; ciOnPass=null; if(cb) cb();
 });
 function updateDeptSummary(){$("deptSummary").value=unionDepts(current).join(" / ")||"—";}
 $("editArrival").addEventListener("change",function(){if(current){current.arrival=$("editArrival").value;current.updated=Date.now();current.synced=false;persist();}});
 
 $("btnSave").addEventListener("click",async function(){current.arrival=$("editArrival").value||current.arrival;current.updated=Date.now();await pushSession(current,editingDone?"Changes saved":"Saved");if(editingDone)openReport(current);});
-function finishVisit(){var sc=computeScores(current);if(summaryRequired()){var sm=(current.summary||"").trim();if(sm.length<SUMMARY_MIN){alert("A summary / foreword of at least "+SUMMARY_MIN+" characters is required before finishing (currently "+sm.length+").");show("reportView");updateSummaryHint();var el=$("reportSummary");if(el){el.focus();if(el.scrollIntoView)el.scrollIntoView({block:"center"});}return;}}if((current.findings||[]).length===0&&sc.answered===0){if(!confirm("No findings and no questionnaire answered. End the visit anyway?"))return;}if(!confirm("End this visit? Departure time will be recorded as now."))return;current.status="done";current.everDone=true;current.departure=nowHM();current.arrival=$("editArrival").value||current.arrival;current.updated=Date.now();pushSession(current,"Done");openReport(current);}
+function finishVisit(){var sc=computeScores(current);if(summaryRequired()){var sm=(current.summary||"").trim();if(sm.length<SUMMARY_MIN){alert("A summary / foreword of at least "+SUMMARY_MIN+" characters is required before finishing (currently "+sm.length+").");show("reportView");updateSummaryHint();var el=$("reportSummary");if(el){el.focus();if(el.scrollIntoView)el.scrollIntoView({block:"center"});}return;}}if((current.findings||[]).length===0&&sc.answered===0){if(!confirm("No findings and no questionnaire answered. End the visit anyway?"))return;}if(!confirm("End this visit? Departure time will be recorded as now."))return;current.status="done";current.everDone=true;current.departure=nowHM();current.arrival=$("editArrival").value||current.arrival;current.updated=Date.now();pushSession(current,"Done");openReport(current);uploadArchive(current);}
 $("btnBackHome").addEventListener("click",function(){renderLists();$("barSub").textContent="";show("homeView");});
 $("btnViewReport").addEventListener("click",function(){openReport(current);});
 
@@ -1976,14 +2095,35 @@ function canEdit(s){
 }
 $("btnEditReport").addEventListener("click", function(){ if(current) openVisit(current); });
 
+function storagePathOf(u){ if(!u||typeof u!=="string") return null; var t="/"+BUCKET+"/"; var i=u.indexOf(t); return i<0?null:u.slice(i+t.length); }
+async function deleteVisitPhotos(sess){
+  try{
+    var paths=[];
+    (sess&&sess.findings||[]).forEach(function(f){ photosOf(f).forEach(function(u){ var p=storagePathOf(u); if(p) paths.push(p); }); });
+    if(paths.length){ await sb.storage.from(BUCKET).remove(paths); }
+  }catch(e){}
+}
 async function deleteVisit(id){
+  var sess=sessions.find(function(x){return x.id===id;});
   sessions=sessions.filter(function(x){return x.id!==id;}); persist();
-  if(loggedIn()){ try{ var r=await sb.from(TABLE).delete().eq("id",id); if(r.error) return r.error.message; }catch(e){ return (e.message||String(e)); } }
+  if(loggedIn()){
+    try{
+      var r=await sb.from(TABLE).delete().eq("id",id); if(r.error) return r.error.message;
+      // remove any tracked issues this visit created, so follow-ups & scoring aren't affected forever
+      try{ await sb.from("issues").delete().eq("created_visit_id",id); }catch(e){}
+      // best-effort: purge this visit's uploaded photos from storage
+      if(sess) await deleteVisitPhotos(sess);
+    }catch(e){ return (e.message||String(e)); }
+  }
   return null;
 }
 async function verifyPassword(pass){
   if(!me||!sb) return false;
-  try{ var r=await sb.auth.signInWithPassword({email:me.email, password:pass}); return !r.error; }catch(e){ return false; }
+  try{
+    var em=me.email;   // use the real auth-login email (profiles email may be blank, e.g. test accounts)
+    try{ var s=await sb.auth.getSession(); var su=s&&s.data&&s.data.session&&s.data.session.user; if(su&&su.email) em=su.email; }catch(e){}
+    var r=await sb.auth.signInWithPassword({email:em, password:pass}); return !r.error;
+  }catch(e){ return false; }
 }
 async function discardVisit(){
   if(!current) return;
@@ -2327,7 +2467,7 @@ function reportHTML(s){
   if(done && !skipped && sc.answered>0){ deptDetailPages(sc).forEach(function(p){ pages.push(p); }); }
   // ---- Site check-in verification (very last page) ----
   if(s.checkinStart || s.checkinDone){ pages.push(checkinPage(s)); }
-  return pages.map(function(h,idx){ return "<div class='report-page'"+(idx>0?" style='page-break-before:always'":"")+">"+h+"</div>"; }).join("");
+  return pages.map(function(h,idx){ return "<div class='report-page"+(idx>0?" pgbreak":"")+"'>"+h+"</div>"; }).join("");
 }
 function checkinPage(s){
   function blk(title,r){
@@ -2406,13 +2546,9 @@ function updateAuthBar(changed){
   } else { t.textContent="Working on this device only. Open ⚙ Setup to enable cloud + login."; $("authBar").className="authbar"; }
 }
 
-/* ============ Team (owner) ============ */
-async function openTeam(){
-  $("barSub").textContent="· team"; show("teamView");
-  await renderTeam();
-}
+/* ============ Team (now inside Setup) ============ */
+function openTeam(){ openSettings(); }   // team management lives on the Setup page now
 $("btnTeamRefresh").addEventListener("click",renderTeam);
-$("btnTeamBack").addEventListener("click",function(){initHome();});
 async function renderTeam(){
   var box=$("teamList"), msg=$("teamMsg"); msg.textContent=""; box.innerHTML="Loading...";
   if(!loggedIn()){box.innerHTML="Sign in first.";return;}
@@ -2422,7 +2558,7 @@ async function renderTeam(){
   if(!rows.length){ box.innerHTML="<p class='muted'>No team members yet.</p>"; return; }
   var wrap=document.createElement("div"); wrap.style.cssText="overflow-x:auto";
   var tbl=document.createElement("table"); tbl.className="teamtab";
-  tbl.innerHTML="<thead><tr><th>No</th><th>Name</th><th>E-mail Address</th><th>Username</th><th>Role</th><th>Questionnaire</th><th>Photo Verification</th></tr></thead>";
+  tbl.innerHTML="<thead><tr><th>No</th><th>Name</th><th>E-mail Address</th><th>Username</th><th>Role</th><th>Questionnaire</th><th>Photo Verification</th><th>Remove</th></tr></thead>";
   var tb=document.createElement("tbody");
   rows.forEach(function(p,idx){
     var isMe=(me&&p.id===me.id);
@@ -2446,30 +2582,60 @@ async function renderTeam(){
     sel.addEventListener("change",async function(){ msg.textContent="Saving...";msg.className="msg";
       var u=await sb.from("profiles").update({role:sel.value}).eq("id",p.id);
       if(u.error){msg.className="msg err";msg.textContent=u.error.message; sel.value=p.role;}
-      else{p.role=sel.value; cx.disabled=(sel.value==="member"); cx.checked=mustCheckinRole(sel.value,p.id); cx.title=(sel.value==="member")?"Members always take a selfie + GPS check-in":""; msg.className="msg ok";msg.textContent="Updated "+esc(p.name||p.email)+" → "+sel.value;} });
+      else{p.role=sel.value; cx.checked=mustCheckinRole(sel.value,p.id); msg.className="msg ok";msg.textContent="Updated "+esc(p.name||p.email)+" → "+sel.value;} });
     tdRole.appendChild(sel); tr.appendChild(tdRole);
-    // Questionnaire (ticked = may skip questionnaire without a password)
+    // Questionnaire (ticked = MUST fill the questionnaire; unticked = exempt / may skip without password)
     var tdQ=document.createElement("td"); tdQ.style.textAlign="center";
-    var qx=document.createElement("input"); qx.type="checkbox"; qx.checked=isQExempt(p.id);
-    qx.addEventListener("change",async function(){ if(qx.checked){ if(qexempt.indexOf(p.id)<0) qexempt.push(p.id);} else { qexempt=qexempt.filter(function(x){return x!==p.id;}); } msg.className="msg"; msg.textContent="Saving..."; await pushQExempt(); msg.className="msg ok"; msg.textContent=(qx.checked?"Questionnaire optional for ":"Questionnaire required for ")+esc(p.name||p.email)+"."; });
+    var qx=document.createElement("input"); qx.type="checkbox"; qx.checked=!isQExempt(p.id);
+    qx.addEventListener("change",async function(){ if(qx.checked){ qexempt=qexempt.filter(function(x){return x!==p.id;}); } else { if(qexempt.indexOf(p.id)<0) qexempt.push(p.id); } msg.className="msg"; msg.textContent="Saving..."; await pushQExempt(); msg.className="msg ok"; msg.textContent=(qx.checked?"Questionnaire required for ":"Questionnaire exempt: ")+esc(p.name||p.email)+"."; });
     tdQ.appendChild(qx); tr.appendChild(tdQ);
-    // Photo Verification (ticked = must do selfie + GPS check-in). Members are always on (automatic).
+    // Photo Verification (ticked = must do selfie + GPS check-in). Members default ON; owner/admin can turn any member off.
     var tdP=document.createElement("td"); tdP.style.textAlign="center";
-    var cx=document.createElement("input"); cx.type="checkbox"; cx.checked=mustCheckinRole(p.role,p.id); cx.disabled=(p.role==="member");
-    if(p.role==="member") cx.title="Members always take a selfie + GPS check-in";
-    cx.addEventListener("change",async function(){ if(cx.checked){ if(checkinReq.indexOf(p.id)<0) checkinReq.push(p.id);} else { checkinReq=checkinReq.filter(function(x){return x!==p.id;}); } msg.className="msg"; msg.textContent="Saving..."; await pushCheckinReq(); msg.className="msg ok"; msg.textContent=(cx.checked?"Check-in required for ":"Check-in off for ")+esc(p.name||p.email)+"."; });
+    var cx=document.createElement("input"); cx.type="checkbox"; cx.checked=mustCheckinRole(p.role,p.id);
+    cx.addEventListener("change",async function(){
+      if(p.role==="member"){ if(cx.checked){ checkinOff=checkinOff.filter(function(x){return x!==p.id;}); } else { if(checkinOff.indexOf(p.id)<0) checkinOff.push(p.id); } }
+      else { if(cx.checked){ if(checkinReq.indexOf(p.id)<0) checkinReq.push(p.id);} else { checkinReq=checkinReq.filter(function(x){return x!==p.id;}); } }
+      msg.className="msg"; msg.textContent="Saving..."; await pushCheckinReq(); msg.className="msg ok"; msg.textContent=(cx.checked?"Check-in required for ":"Check-in off for ")+esc(p.name||p.email)+".";
+    });
     tdP.appendChild(cx); tr.appendChild(tdP);
+    // Remove user (owner/admin only; can't delete yourself or the owner)
+    var tdDel=document.createElement("td"); tdDel.style.textAlign="center";
+    if(!isMe && p.role!=="owner"){
+      var db=document.createElement("button"); db.type="button"; db.textContent="✕"; db.title="Delete this user"; db.style.cssText="border:none;background:#9b0a0a;color:#fff;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px";
+      db.addEventListener("click",async function(){
+        if(!confirm("Delete "+(p.name||p.email||"this user")+" permanently?\n\nTheir account AND all of their visits will be removed. This cannot be undone.")) return;
+        var pass=prompt("Enter YOUR password to confirm deleting this user:");
+        if(pass===null||pass==="") return;
+        msg.className="msg"; msg.textContent="Verifying...";
+        var ok=await verifyPassword(pass);
+        if(!ok){ msg.className="msg err"; msg.textContent="Password incorrect — nothing was deleted."; return; }
+        msg.textContent="Deleting...";
+        var r=await sb.rpc("delete_user",{p_id:p.id});
+        if(r.error){ msg.className="msg err"; msg.textContent=r.error.message||"Delete failed."; return; }
+        tr.remove(); msg.className="msg ok"; msg.textContent="Deleted "+esc(p.name||p.email||"user")+".";
+      });
+      tdDel.appendChild(db);
+    } else { tdDel.innerHTML="<span class='muted' style='font-size:11px'>—</span>"; }
+    tr.appendChild(tdDel);
     tb.appendChild(tr);
   });
   tbl.appendChild(tb); wrap.appendChild(tbl); box.innerHTML=""; box.appendChild(wrap);
   var lg=document.createElement("p"); lg.className="muted"; lg.style.cssText="font-size:11px;margin-top:8px;line-height:1.5";
-  lg.innerHTML="<b>Username</b> is generated once at sign-up and stays fixed (editing a name does not change it). <b>Questionnaire</b> ticked = that person may skip the questionnaire without a password. <b>Photo Verification</b> ticked = that person must take a selfie + GPS check-in at start &amp; submit.";
+  lg.innerHTML="<b>Username</b> is generated once at sign-up and stays fixed. <b>Questionnaire</b> ticked = that person <b>must fill</b> the questionnaire; unticked = exempt (may skip without a password). <b>Photo Verification</b> ticked = that person must take a selfie + GPS check-in at start &amp; submit (members are on by default; you can turn any member off).";
   box.appendChild(lg);
 }
 
 /* ============ Settings ============ */
 $("btnSettings").addEventListener("click",openSettings);
-function openSettings(){$("sbUrl").value=sbUrl||"";$("sbKey").value=sbKey||"";renderBrandTree();$("barSub").textContent="· setup";show("settingsView");}
+function openSettings(){
+  $("sbUrl").value=sbUrl||"";$("sbKey").value=sbKey||"";renderBrandTree();$("barSub").textContent="· setup";
+  var staff=(isStaff()&&loggedIn());
+  $("membersCard").classList.toggle("hide", !staff);
+  if($("invResult")) $("invResult").classList.add("hide");
+  if($("invMsg")) $("invMsg").textContent="";
+  show("settingsView");
+  if(staff) renderTeam();
+}
 $("btnSettingsBack").addEventListener("click",function(){ boot(); });
 $("sbUrl").addEventListener("change",function(){sbUrl=$("sbUrl").value.trim().replace(/\/+$/,"");save(LS.sbUrl,sbUrl);initSupabase();});
 $("sbKey").addEventListener("change",function(){sbKey=$("sbKey").value.trim();save(LS.sbKey,sbKey);initSupabase();});
@@ -2498,6 +2664,8 @@ async function initHome(){
 }
 async function boot(){
   initSupabase();
+  var tok=detectInvite();
+  if(tok && window.supabase && cloudConfigured()){ inviteToken=tok; openSetPw(); return; }   // invitee opening a "set password" link
   if(cloudConfigured()){
     if(!window.supabase){ // offline / lib missing but cloud configured
       if(me){ await initHome(); } else { show("loginView"); renderAuthMode(); }
