@@ -294,6 +294,21 @@
     <div class="card">
       <div class="sec-head"><h2 class="section" id="allTitle" style="margin:0;border:none">All reports</h2><button class="btn back small" id="btnAllBack" style="width:auto;padding:6px 12px">← Back</button></div>
       <input type="text" id="allSearch" placeholder="🔎 Search by brand, outlet, city, inspector or date…" autocapitalize="none" style="width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-size:14px;margin:10px 0">
+      <div style="border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafafa;margin-bottom:10px">
+        <div class="two">
+          <div class="row"><label>From date</label><input type="date" id="fFrom"></div>
+          <div class="row"><label>To date</label><input type="date" id="fTo"></div>
+        </div>
+        <div class="two">
+          <div class="row"><label>Brand</label><select id="fBrand"></select></div>
+          <div class="row"><label>City</label><select id="fCity"></select></div>
+        </div>
+        <div class="two">
+          <div class="row"><label>Outlet</label><select id="fOutlet"></select></div>
+          <div class="row"><label>Inspector</label><select id="fInsp"></select></div>
+        </div>
+        <button class="btn small grey" id="fClear" style="width:auto">Clear filters</button>
+      </div>
       <p class="muted" id="allCount" style="font-size:12px;margin:0 0 10px"></p>
       <div id="allList"></div>
       <p class="muted" id="allEmpty" style="display:none">No matching reports.</p>
@@ -605,7 +620,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ar</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31as</div>
 </div>
 
 <script>
@@ -1380,25 +1395,46 @@ function matchQuery(s,q){
   return q.toLowerCase().split(/\s+/).every(function(t){ return !t || hay.indexOf(t)>=0; });
 }
 var allReportsStaff=false;
+function allReportsScope(){ return sessions.filter(function(s){return s.status==="done" && (allReportsStaff || isOwnSession(s));}); }
+function distinctOf(list, fn){ var set={}; list.forEach(function(s){ (fn(s)||[]).forEach(function(v){ if(v) set[v]=1; }); }); return Object.keys(set).sort(); }
+function fillFilterSelect(id, values, allLabel){ var el=$(id); if(!el) return; el.innerHTML="<option value=''>"+allLabel+"</option>"+values.map(function(v){return "<option>"+esc(v)+"</option>";}).join(""); }
+function clearAllFilters(){ ["fFrom","fTo","fBrand","fCity","fOutlet","fInsp","allSearch"].forEach(function(id){ if($(id)) $(id).value=""; }); }
 function openAllReports(staffScope){
   allReportsStaff=!!staffScope;
   $("allTitle").textContent = allReportsStaff ? "All reports — everyone" : "All my reports";
-  $("allSearch").value=""; $("barSub").textContent="· all reports";
+  clearAllFilters();
+  var scope=allReportsScope();
+  fillFilterSelect("fBrand", distinctOf(scope,function(s){return [s.brand];}), "All brands");
+  fillFilterSelect("fCity",  distinctOf(scope,function(s){return [s.city];}),  "All cities");
+  fillFilterSelect("fOutlet",distinctOf(scope,function(s){return [s.outlet];}),"All outlets");
+  fillFilterSelect("fInsp",  distinctOf(scope,inspectorsOf), "Everyone");
+  $("barSub").textContent="· all reports";
   show("allReportsView"); renderAllReports();
-  var el=$("allSearch"); if(el) el.focus();
 }
 function renderAllReports(){
   var q=($("allSearch").value||"").trim();
-  var list=sessions.filter(function(s){return s.status==="done" && (allReportsStaff || isOwnSession(s));}).sort(byNewest).filter(function(s){return matchQuery(s,q);});
+  var from=$("fFrom").value, to=$("fTo").value, b=$("fBrand").value, c=$("fCity").value, o=$("fOutlet").value, ins=$("fInsp").value;
+  var list=allReportsScope().sort(byNewest).filter(function(s){
+    if(!matchQuery(s,q)) return false;
+    if(from && (s.date||"")<from) return false;
+    if(to && (s.date||"")>to) return false;
+    if(b && s.brand!==b) return false;
+    if(c && s.city!==c) return false;
+    if(o && s.outlet!==o) return false;
+    if(ins && inspectorsOf(s).indexOf(ins)<0) return false;
+    return true;
+  });
   var box=$("allList"); box.innerHTML="";
   $("allEmpty").style.display=list.length?"none":"block";
-  $("allCount").textContent=list.length+" report"+(list.length===1?"":"s")+(q?" matching “"+q+"”":"");
+  $("allCount").textContent=list.length+" report"+(list.length===1?"":"s");
   list.forEach(function(s){ box.appendChild(sessCard(s)); });
 }
 $("btnAllMine").addEventListener("click",function(){ openAllReports(false); });
 $("btnAllTeam").addEventListener("click",function(){ openAllReports(true); });
 $("btnAllBack").addEventListener("click",function(){ renderLists(); $("barSub").textContent=""; show("homeView"); });
 $("allSearch").addEventListener("input",renderAllReports);
+["fFrom","fTo","fBrand","fCity","fOutlet","fInsp"].forEach(function(id){ $(id).addEventListener("change",renderAllReports); });
+$("fClear").addEventListener("click",function(){ clearAllFilters(); renderAllReports(); });
 
 $("btnStart").addEventListener("click",function(){
   var k=findKey();if(!k){alert("Please choose Brand, City, Outlet and Date first.");return;}
