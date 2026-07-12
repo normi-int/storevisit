@@ -309,6 +309,10 @@
         </div>
         <button class="btn small grey" id="fClear" style="width:auto">Clear filters</button>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn small brown" id="btnBackupAll" style="width:auto">⬆ Back up listed reports to Drive</button>
+        <span id="backupMsg" class="muted" style="font-size:12px"></span>
+      </div>
       <p class="muted" id="allCount" style="font-size:12px;margin:0 0 10px"></p>
       <div id="allList"></div>
       <p class="muted" id="allEmpty" style="display:none">No matching reports.</p>
@@ -620,7 +624,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31as</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31at</div>
 </div>
 
 <script>
@@ -1424,11 +1428,24 @@ function renderAllReports(){
     if(ins && inspectorsOf(s).indexOf(ins)<0) return false;
     return true;
   });
+  allListCurrent=list;
   var box=$("allList"); box.innerHTML="";
   $("allEmpty").style.display=list.length?"none":"block";
-  $("allCount").textContent=list.length+" report"+(list.length===1?"":"s");
+  var notBacked=list.filter(function(s){return !s.drive_url;}).length;
+  $("allCount").textContent=list.length+" report"+(list.length===1?"":"s")+(notBacked?" · "+notBacked+" not yet on Drive":"");
+  var bb=$("btnBackupAll"); if(bb){ bb.style.display=notBacked?"inline-flex":"none"; }
   list.forEach(function(s){ box.appendChild(sessCard(s)); });
 }
+var allListCurrent=[];
+$("btnBackupAll").addEventListener("click",async function(){
+  if(!loggedIn()||!sb||!sb.storage){ $("backupMsg").textContent="Sign in (online) to back up."; return; }
+  var todo=allListCurrent.filter(function(s){return !s.drive_url;});
+  if(!todo.length){ $("backupMsg").textContent="Everything listed is already backed up."; return; }
+  var bb=$("btnBackupAll"); bb.disabled=true;
+  for(var i=0;i<todo.length;i++){ $("backupMsg").textContent="Uploading "+(i+1)+" of "+todo.length+"…"; await uploadArchive(todo[i]); }
+  bb.disabled=false;
+  $("backupMsg").textContent="✓ Uploaded "+todo.length+" report(s). They'll appear in Google Drive within the hour (or run the Apps Script now); the Download button shows after the next sync (↻).";
+});
 $("btnAllMine").addEventListener("click",function(){ openAllReports(false); });
 $("btnAllTeam").addEventListener("click",function(){ openAllReports(true); });
 $("btnAllBack").addEventListener("click",function(){ renderLists(); $("barSub").textContent=""; show("homeView"); });
