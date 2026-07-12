@@ -107,6 +107,7 @@
   .btnrow3 .btn{flex:1 1 30%;min-width:120px}
   .btnrow2{display:flex;gap:8px}
   .btnrow2 .btn{flex:1}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
   .finding .body.tap{cursor:pointer}
   .teamtab{border-collapse:collapse;width:100%;font-size:13px;min-width:680px}
   .teamtab th,.teamtab td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
@@ -276,14 +277,26 @@
       <small class="hint" id="startHint"></small>
     </div>
     <div class="card"><h2 class="section">In-progress visits</h2><div id="openList"></div><p class="muted" id="openEmpty">No open visits. Start one above.</p></div>
-    <div class="card"><h2 class="section" id="doneTitle">My last visits</h2><div id="doneList"></div><p class="muted" id="doneEmpty">No finished visits yet.</p></div>
+    <div class="card">
+      <div class="sec-head"><h2 class="section" id="doneTitle" style="margin:0;border:none">My last visits</h2><button class="btn small proceed" id="btnAllMine" style="width:auto;padding:6px 12px">🔎 See all reports</button></div>
+      <div id="doneList"></div><p class="muted" id="doneEmpty">No finished visits yet.</p>
+    </div>
     <div class="card hide" id="teamCard">
-      <h2 class="section">Team — everyone's last visits</h2>
+      <div class="sec-head"><h2 class="section" style="margin:0;border:none">Team — everyone's last visits</h2><button class="btn small proceed" id="btnAllTeam" style="width:auto;padding:6px 12px">🔎 See all reports</button></div>
       <div id="teamDoneList"></div><p class="muted" id="teamDoneEmpty">No team visits yet.</p>
-      <div class="spacer"></div>
-      <button class="btn small proceed noprint hide" id="btnExcel">⬇ Export / choose reports to download</button>
-      <label class="btn small noprint hide" for="importXlsx" style="display:none;cursor:pointer;background:#0891b2;color:#fff">🧾 Compiled report from Excel</label>
+      <button class="btn small proceed noprint hide" id="btnExcel">export</button>
       <input type="file" id="importXlsx" accept=".xlsx,.csv" class="hide">
+    </div>
+  </section>
+
+  <!-- ============ ALL REPORTS (searchable) ============ -->
+  <section id="allReportsView" class="hide">
+    <div class="card">
+      <div class="sec-head"><h2 class="section" id="allTitle" style="margin:0;border:none">All reports</h2><button class="btn back small" id="btnAllBack" style="width:auto;padding:6px 12px">← Back</button></div>
+      <input type="text" id="allSearch" placeholder="🔎 Search by brand, outlet, city, inspector or date…" autocapitalize="none" style="width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-size:14px;margin:10px 0">
+      <p class="muted" id="allCount" style="font-size:12px;margin:0 0 10px"></p>
+      <div id="allList"></div>
+      <p class="muted" id="allEmpty" style="display:none">No matching reports.</p>
     </div>
   </section>
 
@@ -592,7 +605,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31aq</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ar</div>
 </div>
 
 <script>
@@ -645,7 +658,7 @@ var me=null;           // {id, email, name, role}
 var authMode="signin"; // or "signup"
 
 var $=function(id){return document.getElementById(id);};
-function show(v){["loginView","setpwView","homeView","visitView","reportView","editEntriesView","checkinView","requestsView","scoringView","settingsView"].forEach(function(x){$(x).classList.add("hide");});$(v).classList.remove("hide");window.scrollTo(0,0);}
+function show(v){["loginView","setpwView","homeView","visitView","reportView","editEntriesView","checkinView","allReportsView","requestsView","scoringView","settingsView"].forEach(function(x){$(x).classList.add("hide");});$(v).classList.remove("hide");window.scrollTo(0,0);}
 /* ---- Auth-session hardening: stops silent cloud-sync failures (expired login) ---- */
 var authWarn=false;   // true = last sync couldn't confirm the sign-in (prompt re-login) — but we NEVER auto-clear `me`
 function isAuthError(m){ m=(""+m).toLowerCase(); return /row-level security|jwt|not authenticated|unauthorized|invalid token|refresh token|no api key|401|403/.test(m); }
@@ -1222,7 +1235,7 @@ function renderLists(){
   var ol=$("openList");ol.innerHTML="";$("openEmpty").style.display=mineOpen.length?"none":"block";mineOpen.forEach(function(s){ol.appendChild(sessCard(s));});
   var dl=$("doneList");dl.innerHTML="";$("doneEmpty").style.display=mineDone.length?"none":"block";
   mineDone.slice(0,10).forEach(function(s){dl.appendChild(sessCard(s));});
-  if(mineDone.length>10){var n=document.createElement("p");n.className="muted";n.textContent="Showing the latest 10 of "+mineDone.length+".";dl.appendChild(n);}
+  if(mineDone.length>10){var n=document.createElement("p");n.className="muted";n.textContent="Showing the latest 10 of "+mineDone.length+" — tap “See all reports” to search them all.";dl.appendChild(n);}
   // TEAM section (all visits, admin/owner only)
   var staff=isStaff();
   $("teamCard").classList.toggle("hide", !staff);
@@ -1230,7 +1243,7 @@ function renderLists(){
     var allDone=sessions.filter(function(s){return s.status==="done";}).sort(byNewest);
     var td=$("teamDoneList");td.innerHTML="";$("teamDoneEmpty").style.display=allDone.length?"none":"block";
     allDone.slice(0,10).forEach(function(s){td.appendChild(sessCard(s));});
-    if(allDone.length>10){var n2=document.createElement("p");n2.className="muted";n2.textContent="Showing the latest 10 of "+allDone.length+". Use the export button below for the full list & filters.";td.appendChild(n2);}
+    if(allDone.length>10){var n2=document.createElement("p");n2.className="muted";n2.textContent="Showing the latest 10 of "+allDone.length+" — tap “See all reports” to search them all.";td.appendChild(n2);}
   }
   $("btnExcel").textContent = "⬇ Export / choose reports to download";
   updateSyncWarning();
@@ -1359,6 +1372,33 @@ function sessCard(s){var d=document.createElement("div");d.className="sesscard";
     (shared?"<div class='m' style='color:#b45309'>🤝 Shared report with "+esc(othersOf(s).join(", ")||"team")+"</div>":"")+dlbtn;
   var db=d.querySelector(".dlbtn"); if(db) db.addEventListener("click",function(e){ e.stopPropagation(); window.open(s.drive_url,"_blank","noopener"); });
   d.addEventListener("click",function(){s.status==="done"?openReport(s):openVisit(s);});return d;}
+
+/* ============ All reports (searchable) ============ */
+function matchQuery(s,q){
+  if(!q) return true;
+  var hay=((s.brand||"")+" "+(s.city||"")+" "+(s.outlet||"")+" "+(inspectorsOf(s).join(" "))+" "+(s.date||"")+" "+fmtDateLong(s.date)).toLowerCase();
+  return q.toLowerCase().split(/\s+/).every(function(t){ return !t || hay.indexOf(t)>=0; });
+}
+var allReportsStaff=false;
+function openAllReports(staffScope){
+  allReportsStaff=!!staffScope;
+  $("allTitle").textContent = allReportsStaff ? "All reports — everyone" : "All my reports";
+  $("allSearch").value=""; $("barSub").textContent="· all reports";
+  show("allReportsView"); renderAllReports();
+  var el=$("allSearch"); if(el) el.focus();
+}
+function renderAllReports(){
+  var q=($("allSearch").value||"").trim();
+  var list=sessions.filter(function(s){return s.status==="done" && (allReportsStaff || isOwnSession(s));}).sort(byNewest).filter(function(s){return matchQuery(s,q);});
+  var box=$("allList"); box.innerHTML="";
+  $("allEmpty").style.display=list.length?"none":"block";
+  $("allCount").textContent=list.length+" report"+(list.length===1?"":"s")+(q?" matching “"+q+"”":"");
+  list.forEach(function(s){ box.appendChild(sessCard(s)); });
+}
+$("btnAllMine").addEventListener("click",function(){ openAllReports(false); });
+$("btnAllTeam").addEventListener("click",function(){ openAllReports(true); });
+$("btnAllBack").addEventListener("click",function(){ renderLists(); $("barSub").textContent=""; show("homeView"); });
+$("allSearch").addEventListener("input",renderAllReports);
 
 $("btnStart").addEventListener("click",function(){
   var k=findKey();if(!k){alert("Please choose Brand, City, Outlet and Date first.");return;}
