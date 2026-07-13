@@ -624,7 +624,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31at</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31av</div>
 </div>
 
 <script>
@@ -1442,9 +1442,12 @@ $("btnBackupAll").addEventListener("click",async function(){
   var todo=allListCurrent.filter(function(s){return !s.drive_url;});
   if(!todo.length){ $("backupMsg").textContent="Everything listed is already backed up."; return; }
   var bb=$("btnBackupAll"); bb.disabled=true;
-  for(var i=0;i<todo.length;i++){ $("backupMsg").textContent="Uploading "+(i+1)+" of "+todo.length+"…"; await uploadArchive(todo[i]); }
+  try{ await sb.auth.refreshSession(); }catch(e){}   // make sure the upload runs as a signed-in user, not anon
+  var okN=0, firstErr="";
+  for(var i=0;i<todo.length;i++){ $("backupMsg").textContent="Uploading "+(i+1)+" of "+todo.length+"…"; var r=await uploadArchive(todo[i]); if(r&&r.ok){ okN++; } else if(!firstErr){ firstErr=(r&&r.error)||"unknown error"; } }
   bb.disabled=false;
-  $("backupMsg").textContent="✓ Uploaded "+todo.length+" report(s). They'll appear in Google Drive within the hour (or run the Apps Script now); the Download button shows after the next sync (↻).";
+  if(firstErr){ $("backupMsg").innerHTML="Uploaded "+okN+" of "+todo.length+". <b style='color:#9b0a0a'>Error:</b> "+esc(firstErr); }
+  else { $("backupMsg").textContent="✓ Uploaded "+okN+" report(s). They'll appear in Google Drive within the hour (or run the Apps Script now); the Download button shows after the next sync (↻)."; }
 });
 $("btnAllMine").addEventListener("click",function(){ openAllReports(false); });
 $("btnAllTeam").addEventListener("click",function(){ openAllReports(true); });
@@ -1740,12 +1743,14 @@ async function buildArchiveHTML(s){
   return "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>"+esc(reportName(s))+"</title><style>"+css+"</style></head><body>"+inner+"</body></html>";
 }
 async function uploadArchive(s){
-  if(!s || !loggedIn() || !sb || !sb.storage) return;
+  if(!s || !loggedIn() || !sb || !sb.storage) return {ok:false, error:"not signed in / offline"};
   try{
     var html=await buildArchiveHTML(s);
     var blob=new Blob([html],{type:"text/html"});
-    await sb.storage.from("reports").upload(s.id+".html", blob, {upsert:true, contentType:"text/html"});
-  }catch(e){ /* best-effort; never block finishing a visit */ }
+    var res=await sb.storage.from("reports").upload(s.id+".html", blob, {upsert:true, contentType:"text/html"});
+    if(res && res.error) return {ok:false, error:(res.error.message||String(res.error))};
+    return {ok:true};
+  }catch(e){ return {ok:false, error:(e&&e.message)||String(e)}; }
 }
 // Store a check-in selfie in file Storage (keeps the small 500 MB database lean).
 // Returns a URL; falls back to the inline data URL if the upload can't happen.
