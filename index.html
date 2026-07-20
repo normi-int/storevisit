@@ -73,7 +73,7 @@
   .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
   .pill.open{background:#fef3c7;color:#92400e}.pill.done{background:#dcfce7;color:#166534}
   .pill.cloud{background:#e0f2fe;color:#075985}.pill.local{background:#f3f4f6;color:#6b7280}
-  .pill.owner{background:#fee2e2;color:#991b1b}.pill.admin{background:#ede9fe;color:#5b21b6}.pill.member{background:#f3f4f6;color:#374151}
+  .pill.owner{background:#fee2e2;color:#991b1b}.pill.admin{background:#ede9fe;color:#5b21b6}.pill.member{background:#f3f4f6;color:#374151}.pill.viewer{background:#e0f2fe;color:#075985}
   .muted{color:var(--muted);font-size:13px}.spacer{height:8px}
   .synced{font-size:12px;padding:6px 10px;border-radius:8px;text-align:center;margin-top:10px}
   .synced.ok{background:#dcfce7;color:#166534}.synced.off{background:#f3f4f6;color:#6b7280}.synced.err{background:#fee2e2;color:#991b1b}
@@ -120,6 +120,27 @@
   .thumbrow .t img{width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
   .thumbrow .t .x{position:absolute;top:-8px;right:-8px;background:var(--red);color:#fff;border:none;border-radius:999px;width:24px;height:24px;font-size:14px;cursor:pointer}
   .mgmt-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}.mgmt-row .n{flex:1;font-size:14px}
+  /* collapsible brand cards */
+  .brandcard{border:1px solid var(--line);border-radius:12px;background:#faf9f7;margin-bottom:10px;overflow:hidden}
+  .brandcard-h{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer}
+  .brandcard-h:hover{background:#f4f2ee}
+  .brandcard-h .car{color:#9aa2ad;font-size:12px;transition:transform .15s;flex:0 0 auto}
+  .brandcard.open .brandcard-h .car{transform:rotate(90deg)}
+  .brandcard-h .bn{flex:1;font-weight:800;font-size:16px;color:var(--ink)}
+  .brandcard-h .cnt{color:var(--muted);font-size:14px;white-space:nowrap}
+  .brandcard-h .del{font-weight:400}
+  .brandcard-body{display:none;padding:0 14px 12px;border-top:1px solid var(--line)}
+  .brandcard.open .brandcard-body{display:block}
+  /* central kitchens */
+  .ckrow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;flex-wrap:wrap}
+  .ckcode{flex:0 0 auto;font-size:12px;font-weight:700;background:#eef0f2;color:#4b5563;padding:5px 10px;border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .ckrow .ckname{flex:2 1 200px}.ckrow .ckcity{flex:1 1 120px}
+  .ckrow .ckname input,.ckrow .ckcity input{padding:10px 12px;font-size:15px}
+  .ckvis{flex:0 0 auto;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;margin:0}
+  .ckvis input{width:auto;margin:0}
+  .ckadd{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px}
+  .ckadd input{flex:1 1 120px;padding:12px}
+  .ckadd .ckadd-code{flex:0 1 160px}
   small.hint{display:block;color:var(--muted);font-size:12px;margin-top:4px}
   .authbar{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;padding:10px 12px;border-radius:10px;background:#eef2ff;color:#3730a3}
   .authbar .grow{flex:1}
@@ -282,7 +303,10 @@
       <div id="doneList"></div><p class="muted" id="doneEmpty">No finished visits yet.</p>
     </div>
     <div class="card hide" id="teamCard">
-      <div class="sec-head"><h2 class="section" style="margin:0;border:none">Team — everyone's last visits</h2><button class="btn small proceed" id="btnAllTeam" style="width:auto;padding:6px 12px">🔎 See all reports</button></div>
+      <div class="sec-head"><h2 class="section" style="margin:0;border:none">Team — everyone's visits</h2><button class="btn small proceed" id="btnAllTeam" style="width:auto;padding:6px 12px">🔎 See all reports</button></div>
+      <label style="margin:2px 0 6px">In-progress</label>
+      <div id="teamOpenList"></div><p class="muted" id="teamOpenEmpty">No in-progress visits.</p>
+      <label style="margin:14px 0 6px">Finished</label>
       <div id="teamDoneList"></div><p class="muted" id="teamDoneEmpty">No team visits yet.</p>
       <button class="btn small proceed noprint hide" id="btnExcel">export</button>
       <input type="file" id="importXlsx" accept=".xlsx,.csv" class="hide">
@@ -607,10 +631,22 @@
       <button class="btn proceed hide" id="btnGoLogin">Continue → Sign in / Create account</button>
     </div>
     <div class="card">
-      <h2 class="section">Manage brands, cities &amp; outlets</h2>
+      <h2 class="section">Outlets</h2>
       <div class="row"><label>Add a brand</label>
         <div class="mgmt-row"><input type="text" id="newBrand" class="n" placeholder="e.g. Devon"><button class="btn small add" id="addBrand">Add</button></div>
         <div id="brandTree"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 class="section">Central Kitchens</h2>
+      <small class="hint" style="margin:-6px 0 12px">Not retail outlets, so they're not part of Store Visit's list — managed only here.</small>
+      <div id="ckList"></div>
+      <label style="margin-top:10px">Add a Central Kitchen</label>
+      <div class="ckadd">
+        <input type="text" id="newCkName" placeholder="Name, e.g. Central Kitchen 3">
+        <input type="text" id="newCkCity" placeholder="City">
+        <input type="text" id="newCkCode" class="ckadd-code" placeholder="Code, e.g. GW21">
+        <button class="btn small add" id="addCk">Add</button>
       </div>
     </div>
     <div class="card">
@@ -655,9 +691,13 @@ var DEFAULT_CFG={brands:[
     {name:"Semarang",outlets:["DP Mall","Queen City Mall"]},
     {name:"Surabaya",outlets:["Imam Bonjol","Pakuwon City Mall","Pakuwon Mall","Tunjungan Plaza 5"]},
     {name:"Yogyakarta",outlets:["Pakuwon Mall Jogja"]}]}
+],centralKitchens:[
+  {code:"GW20",name:"CK Pastry",city:"Jakarta",visible:true},
+  {code:"GW19",name:"CK19",city:"Jakarta",visible:true}
 ]};
 
 var cfg=load(LS.cfg,null); if(!cfg){cfg=JSON.parse(JSON.stringify(DEFAULT_CFG));save(LS.cfg,cfg);}
+if(!cfg.brands)cfg.brands=[]; if(!Array.isArray(cfg.centralKitchens))cfg.centralKitchens=[];
 var sessions=load(LS.sessions,[]);
 var inspector=load(LS.insp,"");
 var sbUrl=load(LS.sbUrl,"")||BUILTIN.url, sbKey=load(LS.sbKey,"")||BUILTIN.key;
@@ -763,6 +803,9 @@ function cloudConfigured(){return !!(sbUrl&&sbKey);}
 function loggedIn(){return !!(sb&&me);}
 function isStaff(){return !!(me&&(me.role==="owner"||me.role==="admin"));}
 function isOwner(){return !!(me&&me.role==="owner");}
+/* viewer = read-only role that can see everyone's reports (open + done) but cannot edit/delete/manage */
+function isViewer(){return !!(me&&me.role==="viewer");}
+function canSeeAll(){return !!(me&&(me.role==="owner"||me.role==="admin"||me.role==="viewer"));}
 function updateSetupBtn(){ $("btnSettings").classList.toggle("hide", !(isOwner() || !cloudConfigured())); }
 
 /* ============ Supabase ============ */
@@ -833,7 +876,7 @@ var OUTLET_COORDS={              // baked-in coords "Brand|City|Outlet": {lat,ln
 var outletCoords={};            // cloud override (app_config "outletcoords")
 function requiresCheckin(id){ return !!(id && checkinReq.indexOf(id)>=0); }
 // Members check in by default (unless owner/admin turned it off for them); owner/admin only if explicitly flagged on.
-function mustCheckinRole(role,id){ return role==="member" ? (checkinOff.indexOf(id)<0) : (checkinReq.indexOf(id)>=0); }
+function mustCheckinRole(role,id){ return (role==="member"||role==="viewer") ? (checkinOff.indexOf(id)<0) : (checkinReq.indexOf(id)>=0); }
 function meMustCheckin(){ return !!(loggedIn() && me && mustCheckinRole(me.role, me.id)); }
 function coordKey(s){ return (s.brand||"")+"|"+(s.city||"")+"|"+(s.outlet||""); }
 function outletCoordFor(s){ if(!s) return null; var k=coordKey(s); return outletCoords[k]||OUTLET_COORDS[k]||null; }
@@ -1242,7 +1285,7 @@ function isShared(s){ return !!(s && ((s.shared_with&&s.shared_with.length)||(s.
 function isSharedParticipant(s){ return isShared(s) && loggedIn() && (isCreator(s)||isCoInspector(s)); }
 function inspectorsOf(s){ var a=[s.inspector].concat((s.coInspectors||[]).map(function(c){return c.first;})); return a.filter(Boolean).sort(function(x,y){return (x||"").localeCompare(y||"");}); }
 function othersOf(s){ var mineFirst=(loggedIn()?firstNameOf(me.name):inspector); return inspectorsOf(s).filter(function(n){return n!==mineFirst;}); }
-function mineOnly(s){ if(isStaff()) return true; if(loggedIn()) return (s.user_id===me.id)||sharedWithMe(s)||(!s.user_id&&s.inspector===firstNameOf(me.name)); return true; }
+function mineOnly(s){ if(canSeeAll()) return true; if(loggedIn()) return (s.user_id===me.id)||sharedWithMe(s)||(!s.user_id&&s.inspector===firstNameOf(me.name)); return true; }
 function matchKeyFn(k){return function(s){return s.brand===k.brand&&s.city===k.city&&s.outlet===k.outlet&&s.date===k.date&&isOwnSession(s);};}
 
 function isOwnSession(s){ if(!loggedIn()) return true; return (s.user_id===me.id)||sharedWithMe(s)||(!s.user_id&&s.inspector===firstNameOf(me.name)); }
@@ -1255,10 +1298,13 @@ function renderLists(){
   var dl=$("doneList");dl.innerHTML="";$("doneEmpty").style.display=mineDone.length?"none":"block";
   mineDone.slice(0,10).forEach(function(s){dl.appendChild(sessCard(s));});
   if(mineDone.length>10){var n=document.createElement("p");n.className="muted";n.textContent="Showing the latest 10 of "+mineDone.length+" — tap “See all reports” to search them all.";dl.appendChild(n);}
-  // TEAM section (all visits, admin/owner only)
-  var staff=isStaff();
+  // TEAM section (all visits — owner/admin, and read-only viewers)
+  var staff=canSeeAll();
   $("teamCard").classList.toggle("hide", !staff);
   if(staff){
+    var allOpen=sessions.filter(function(s){return s.status==="open";}).sort(byNewest);
+    var to=$("teamOpenList");to.innerHTML="";$("teamOpenEmpty").style.display=allOpen.length?"none":"block";
+    allOpen.forEach(function(s){to.appendChild(sessCard(s));});
     var allDone=sessions.filter(function(s){return s.status==="done";}).sort(byNewest);
     var td=$("teamDoneList");td.innerHTML="";$("teamDoneEmpty").style.display=allDone.length?"none":"block";
     allDone.slice(0,10).forEach(function(s){td.appendChild(sessCard(s));});
@@ -2676,7 +2722,7 @@ async function renderTeam(){
       msg.className="msg ok"; msg.textContent="Saved name for "+esc(nm)+" (username stays the same)."; });
     // Role
     var tdRole=document.createElement("td"); var sel=document.createElement("select"); sel.className="tcell-in";
-    ["member","admin","owner"].forEach(function(role){var o=document.createElement("option");o.value=role;o.textContent=role;if(p.role===role)o.selected=true;sel.appendChild(o);});
+    ["member","viewer","admin","owner"].forEach(function(role){var o=document.createElement("option");o.value=role;o.textContent=(role==="viewer"?"viewer (read-only, sees all)":role);if(p.role===role)o.selected=true;sel.appendChild(o);});
     sel.addEventListener("change",async function(){ msg.textContent="Saving...";msg.className="msg";
       var u=await sb.from("profiles").update({role:sel.value}).eq("id",p.id);
       if(u.error){msg.className="msg err";msg.textContent=u.error.message; sel.value=p.role;}
@@ -2691,7 +2737,7 @@ async function renderTeam(){
     var tdP=document.createElement("td"); tdP.style.textAlign="center";
     var cx=document.createElement("input"); cx.type="checkbox"; cx.checked=mustCheckinRole(p.role,p.id);
     cx.addEventListener("change",async function(){
-      if(p.role==="member"){ if(cx.checked){ checkinOff=checkinOff.filter(function(x){return x!==p.id;}); } else { if(checkinOff.indexOf(p.id)<0) checkinOff.push(p.id); } }
+      if(p.role==="member"||p.role==="viewer"){ if(cx.checked){ checkinOff=checkinOff.filter(function(x){return x!==p.id;}); } else { if(checkinOff.indexOf(p.id)<0) checkinOff.push(p.id); } }
       else { if(cx.checked){ if(checkinReq.indexOf(p.id)<0) checkinReq.push(p.id);} else { checkinReq=checkinReq.filter(function(x){return x!==p.id;}); } }
       msg.className="msg"; msg.textContent="Saving..."; await pushCheckinReq(); msg.className="msg ok"; msg.textContent=(cx.checked?"Check-in required for ":"Check-in off for ")+esc(p.name||p.email)+".";
     });
@@ -2726,7 +2772,7 @@ async function renderTeam(){
 /* ============ Settings ============ */
 $("btnSettings").addEventListener("click",openSettings);
 function openSettings(){
-  $("sbUrl").value=sbUrl||"";$("sbKey").value=sbKey||"";renderBrandTree();$("barSub").textContent="· setup";
+  $("sbUrl").value=sbUrl||"";$("sbKey").value=sbKey||"";renderBrandTree();renderCK();$("barSub").textContent="· setup";
   var staff=(isStaff()&&loggedIn());
   $("membersCard").classList.toggle("hide", !staff);
   if($("invResult")) $("invResult").classList.add("hide");
@@ -2741,7 +2787,62 @@ $("btnTestSync").addEventListener("click",async function(){sbUrl=$("sbUrl").valu
 $("btnGoLogin").addEventListener("click",function(){ boot(); });
 
 $("addBrand").addEventListener("click",function(){var n=$("newBrand").value.trim();if(!n)return;if(cfg.brands.some(function(b){return b.name.toLowerCase()===n.toLowerCase();})){alert("Brand exists.");return;}cfg.brands.push({name:n,cities:[]});$("newBrand").value="";save(LS.cfg,cfg);pushConfig();renderBrandTree();fillBrands();});
-function renderBrandTree(){var root=$("brandTree");root.innerHTML="";cfg.brands.forEach(function(b,bi){var box=document.createElement("div");box.className="card";box.style.padding="12px";box.style.margin="0 0 10px";box.innerHTML="<div class='mgmt-row'><b class='n'>🏷 "+esc(b.name)+"</b><button class='del' data-b='"+bi+"' data-act='delB'>delete brand</button></div>";b.cities.forEach(function(c,ci){var cd=document.createElement("div");cd.style.margin="6px 0 6px 10px";cd.innerHTML="<div class='mgmt-row'><span class='n'>📍 "+esc(c.name)+"</span><button class='del' data-b='"+bi+"' data-c='"+ci+"' data-act='delC'>delete city</button></div>";c.outlets.forEach(function(o,oi){var od=document.createElement("div");od.style.margin="2px 0 2px 20px";od.className="mgmt-row";od.innerHTML="<span class='n muted'>🏬 "+esc(o)+"</span><button class='del' data-b='"+bi+"' data-c='"+ci+"' data-o='"+oi+"' data-act='delO'>remove</button>";cd.appendChild(od);});var addO=document.createElement("div");addO.className="mgmt-row";addO.style.marginLeft="20px";addO.innerHTML="<input type='text' class='n' placeholder='add outlet in "+esc(c.name)+"'><button class='btn small' data-b='"+bi+"' data-c='"+ci+"' data-act='addO'>Add</button>";cd.appendChild(addO);box.appendChild(cd);});var addC=document.createElement("div");addC.className="mgmt-row";addC.style.marginLeft="10px";addC.innerHTML="<input type='text' class='n' placeholder='add city in "+esc(b.name)+"'><button class='btn small' data-b='"+bi+"' data-act='addC'>Add</button>";box.appendChild(addC);root.appendChild(box);});root.querySelectorAll("[data-act]").forEach(function(btn){btn.addEventListener("click",function(){var bi=+btn.getAttribute("data-b"),ci=+btn.getAttribute("data-c"),oi=+btn.getAttribute("data-o"),act=btn.getAttribute("data-act");if(act==="delB"){if(confirm("Delete brand and all its cities/outlets?"))cfg.brands.splice(bi,1);}else if(act==="delC"){if(confirm("Delete this city?"))cfg.brands[bi].cities.splice(ci,1);}else if(act==="delO"){cfg.brands[bi].cities[ci].outlets.splice(oi,1);}else if(act==="addC"){var v=btn.previousElementSibling.value.trim();if(!v)return;cfg.brands[bi].cities.push({name:v,outlets:[]});}else if(act==="addO"){var v2=btn.previousElementSibling.value.trim();if(!v2)return;cfg.brands[bi].cities[ci].outlets.push(v2);}save(LS.cfg,cfg);pushConfig();renderBrandTree();fillBrands();fillCities();});});}
+$("addCk").addEventListener("click",function(){var nm=$("newCkName").value.trim(),ct=$("newCkCity").value.trim(),cd=$("newCkCode").value.trim();if(!nm){alert("Enter a name.");return;}if(cd&&cfg.centralKitchens.some(function(k){return (k.code||"").toLowerCase()===cd.toLowerCase();})){alert("Code exists.");return;}cfg.centralKitchens.push({code:cd,name:nm,city:ct,visible:true});$("newCkName").value="";$("newCkCity").value="";$("newCkCode").value="";save(LS.cfg,cfg);pushConfig();renderCK();});
+var _brandOpen={};
+function renderBrandTree(){
+  var root=$("brandTree");root.innerHTML="";
+  cfg.brands.forEach(function(b,bi){
+    var count=0;(b.cities||[]).forEach(function(c){count+=(c.outlets||[]).length;});
+    var open=!!_brandOpen[b.name];
+    var box=document.createElement("div");box.className="brandcard"+(open?" open":"");
+    var head=document.createElement("div");head.className="brandcard-h";
+    head.innerHTML="<span class='car'>&#9654;</span><span class='bn'>"+esc(b.name)+"</span><span class='cnt'>"+count+" outlet(s)</span><button class='del' data-b='"+bi+"' data-act='delB'>delete</button>";
+    head.addEventListener("click",function(ev){if(ev.target.closest("[data-act]"))return;_brandOpen[b.name]=!_brandOpen[b.name];box.classList.toggle("open");});
+    box.appendChild(head);
+    var body=document.createElement("div");body.className="brandcard-body";
+    b.cities.forEach(function(c,ci){
+      var cd=document.createElement("div");cd.style.margin="8px 0 6px";
+      cd.innerHTML="<div class='mgmt-row'><span class='n'>&#128205; "+esc(c.name)+"</span><button class='del' data-b='"+bi+"' data-c='"+ci+"' data-act='delC'>delete city</button></div>";
+      c.outlets.forEach(function(o,oi){
+        var od=document.createElement("div");od.style.margin="2px 0 2px 16px";od.className="mgmt-row";
+        od.innerHTML="<span class='n muted'>&#127978; "+esc(o)+"</span><button class='del' data-b='"+bi+"' data-c='"+ci+"' data-o='"+oi+"' data-act='delO'>remove</button>";
+        cd.appendChild(od);
+      });
+      var addO=document.createElement("div");addO.className="mgmt-row";addO.style.marginLeft="16px";
+      var inO=document.createElement("input");inO.type="text";inO.className="n";inO.placeholder="add outlet in "+c.name;
+      var bO=document.createElement("button");bO.className="btn small";bO.textContent="Add";bO.setAttribute("data-b",bi);bO.setAttribute("data-c",ci);bO.setAttribute("data-act","addO");
+      addO.appendChild(inO);addO.appendChild(bO);cd.appendChild(addO);
+      body.appendChild(cd);
+    });
+    var addC=document.createElement("div");addC.className="mgmt-row";
+    var inC=document.createElement("input");inC.type="text";inC.className="n";inC.placeholder="add city in "+b.name;
+    var bC=document.createElement("button");bC.className="btn small";bC.textContent="Add";bC.setAttribute("data-b",bi);bC.setAttribute("data-act","addC");
+    addC.appendChild(inC);addC.appendChild(bC);body.appendChild(addC);
+    box.appendChild(body);
+    root.appendChild(box);
+  });
+  root.querySelectorAll("[data-act]").forEach(function(btn){btn.addEventListener("click",function(ev){ev.stopPropagation();var bi=+btn.getAttribute("data-b"),ci=+btn.getAttribute("data-c"),oi=+btn.getAttribute("data-o"),act=btn.getAttribute("data-act");if(act==="delB"){if(confirm("Delete brand and all its cities/outlets?")){delete _brandOpen[cfg.brands[bi].name];cfg.brands.splice(bi,1);}}else if(act==="delC"){if(confirm("Delete this city?"))cfg.brands[bi].cities.splice(ci,1);}else if(act==="delO"){cfg.brands[bi].cities[ci].outlets.splice(oi,1);}else if(act==="addC"){var v=btn.previousElementSibling.value.trim();if(!v)return;cfg.brands[bi].cities.push({name:v,outlets:[]});}else if(act==="addO"){var v2=btn.previousElementSibling.value.trim();if(!v2)return;cfg.brands[bi].cities[ci].outlets.push(v2);}save(LS.cfg,cfg);pushConfig();renderBrandTree();fillBrands();fillCities();});});}
+function renderCK(){
+  var root=$("ckList");if(!root)return;root.innerHTML="";
+  cfg.centralKitchens.forEach(function(k,ki){
+    var row=document.createElement("div");row.className="ckrow";
+    var code=document.createElement("span");code.className="ckcode";code.textContent=k.code||"—";
+    var nameWrap=document.createElement("div");nameWrap.className="ckname";
+    var inName=document.createElement("input");inName.type="text";inName.value=k.name||"";inName.placeholder="Name";nameWrap.appendChild(inName);
+    var cityWrap=document.createElement("div");cityWrap.className="ckcity";
+    var inCity=document.createElement("input");inCity.type="text";inCity.value=k.city||"";inCity.placeholder="City";cityWrap.appendChild(inCity);
+    var vis=document.createElement("label");vis.className="ckvis";
+    var chk=document.createElement("input");chk.type="checkbox";chk.checked=k.visible!==false;
+    vis.appendChild(chk);vis.appendChild(document.createTextNode("visible"));
+    var del=document.createElement("button");del.className="del";del.textContent="delete";
+    inName.addEventListener("input",function(){k.name=inName.value;save(LS.cfg,cfg);pushConfig();});
+    inCity.addEventListener("input",function(){k.city=inCity.value;save(LS.cfg,cfg);pushConfig();});
+    chk.addEventListener("change",function(){k.visible=chk.checked;save(LS.cfg,cfg);pushConfig();});
+    del.addEventListener("click",function(){if(!confirm("Delete this central kitchen?"))return;cfg.centralKitchens.splice(ki,1);save(LS.cfg,cfg);pushConfig();renderCK();});
+    row.appendChild(code);row.appendChild(nameWrap);row.appendChild(cityWrap);row.appendChild(vis);row.appendChild(del);
+    root.appendChild(row);
+  });
+}
 
 $("btnExport").addEventListener("click",function(){var data={config:cfg,sessions:sessions,exportedAt:new Date().toISOString()};var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="store-visit-backup-"+todayISO()+".json";a.click();});
 $("mergeFile").addEventListener("change",function(e){var file=e.target.files[0];if(!file)return;var r=new FileReader();r.onload=function(ev){try{var data=JSON.parse(ev.target.result),incoming=data.sessions||[];var have={};sessions.forEach(function(s){have[s.id]=1;});var added=0,updated=0;incoming.forEach(function(s){if(have[s.id]){var idx=sessions.findIndex(function(x){return x.id===s.id;});if((s.updated||0)>(sessions[idx].updated||0)){sessions[idx]=s;updated++;}}else{sessions.push(s);added++;}});persist();renderLists();alert("Merged: "+added+" new, "+updated+" updated.");}catch(err){alert("Invalid file.");}e.target.value="";};r.readAsText(file);});
