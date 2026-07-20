@@ -660,7 +660,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31av</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31aw</div>
 </div>
 
 <script>
@@ -887,7 +887,7 @@ async function loadConfigFromCloud(){
     var r=await sb.from("app_config").select("data").eq("key","outlets").limit(1);
     if(!r.error){
       if(r.data && r.data.length && r.data[0].data){
-        cfg=r.data[0].data; save(LS.cfg,cfg); fillBrands(); fillCities(); fillOutlets();
+        cfg=r.data[0].data; if(!cfg.brands)cfg.brands=[]; if(!Array.isArray(cfg.centralKitchens))cfg.centralKitchens=[]; save(LS.cfg,cfg); fillBrands(); fillCities(); fillOutlets();
       } else if(isOwner()){ pushConfig(); } // seed cloud from this owner's list the first time
     }
   }catch(e){}
@@ -2790,7 +2790,8 @@ $("addBrand").addEventListener("click",function(){var n=$("newBrand").value.trim
 $("addCk").addEventListener("click",function(){var nm=$("newCkName").value.trim(),ct=$("newCkCity").value.trim(),cd=$("newCkCode").value.trim();if(!nm){alert("Enter a name.");return;}if(cd&&cfg.centralKitchens.some(function(k){return (k.code||"").toLowerCase()===cd.toLowerCase();})){alert("Code exists.");return;}cfg.centralKitchens.push({code:cd,name:nm,city:ct,visible:true});$("newCkName").value="";$("newCkCity").value="";$("newCkCode").value="";save(LS.cfg,cfg);pushConfig();renderCK();});
 var _brandOpen={};
 function renderBrandTree(){
-  var root=$("brandTree");root.innerHTML="";
+  var root=$("brandTree");if(!root)return;root.innerHTML="";
+  if(!cfg.brands)cfg.brands=[];
   cfg.brands.forEach(function(b,bi){
     var count=0;(b.cities||[]).forEach(function(c){count+=(c.outlets||[]).length;});
     var open=!!_brandOpen[b.name];
@@ -2824,6 +2825,7 @@ function renderBrandTree(){
   root.querySelectorAll("[data-act]").forEach(function(btn){btn.addEventListener("click",function(ev){ev.stopPropagation();var bi=+btn.getAttribute("data-b"),ci=+btn.getAttribute("data-c"),oi=+btn.getAttribute("data-o"),act=btn.getAttribute("data-act");if(act==="delB"){if(confirm("Delete brand and all its cities/outlets?")){delete _brandOpen[cfg.brands[bi].name];cfg.brands.splice(bi,1);}}else if(act==="delC"){if(confirm("Delete this city?"))cfg.brands[bi].cities.splice(ci,1);}else if(act==="delO"){cfg.brands[bi].cities[ci].outlets.splice(oi,1);}else if(act==="addC"){var v=btn.previousElementSibling.value.trim();if(!v)return;cfg.brands[bi].cities.push({name:v,outlets:[]});}else if(act==="addO"){var v2=btn.previousElementSibling.value.trim();if(!v2)return;cfg.brands[bi].cities[ci].outlets.push(v2);}save(LS.cfg,cfg);pushConfig();renderBrandTree();fillBrands();fillCities();});});}
 function renderCK(){
   var root=$("ckList");if(!root)return;root.innerHTML="";
+  if(!Array.isArray(cfg.centralKitchens))cfg.centralKitchens=[];
   cfg.centralKitchens.forEach(function(k,ki){
     var row=document.createElement("div");row.className="ckrow";
     var code=document.createElement("span");code.className="ckcode";code.textContent=k.code||"—";
