@@ -660,7 +660,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ay</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31az</div>
 </div>
 
 <script>
@@ -2641,38 +2641,57 @@ function scorePage(s,c){
     "<table class='rep'><thead><tr><th>Category</th><th style='width:70px;text-align:center'>Answered</th><th style='width:60px;text-align:center'>Score</th></tr></thead><tbody>"+rows+"</tbody></table>";
 }
 function deptInline(f){var d=(f.depts||[]);return d.length?" <span class='muted'>["+d.join(", ")+"]</span>":"";}
-/* ---- Clean PDF export (no browser print dialog) ---- */
-function ensureHtml2pdf(){
+/* ---- Clean PDF export (no browser print dialog) ----
+   Renders each report page to its own canvas (keeps canvases small so
+   phones don't return a blank page), then places one page per A4 sheet. */
+function loadScriptOnce(src,globalCheck){
   return new Promise(function(res,rej){
-    if(window.html2pdf) return res();
-    var sc=document.createElement("script");
-    sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-    sc.onload=function(){ res(); }; sc.onerror=function(){ rej(new Error("Could not load PDF library")); };
+    if(globalCheck()) return res();
+    var sc=document.createElement("script"); sc.src=src;
+    sc.onload=function(){ globalCheck()?res():rej(new Error("bad load")); };
+    sc.onerror=function(){ rej(new Error("Could not load "+src)); };
     document.head.appendChild(sc);
   });
 }
+async function ensurePdfLibs(){
+  await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js", function(){return !!window.html2canvas;});
+  await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js", function(){return !!(window.jspdf&&window.jspdf.jsPDF);});
+}
 async function exportReportPDF(s){
-  var btn=$("btnPrint"), old=btn?btn.textContent:"";
+  var btn=$("btnPrint"), old=btn?btn.textContent:"", stage=null;
   try{
     if(btn){ btn.disabled=true; btn.textContent="Building PDF…"; }
-    await ensureHtml2pdf();
-    var holder=document.createElement("div");
-    holder.className="report-paper pdfexport";
-    holder.style.cssText="position:fixed;left:-10000px;top:0;width:794px;background:#fff;padding:26px;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;color:#1f2937";
-    holder.innerHTML=reportHTML(s);
-    // strip the on-screen page dividers so pages break cleanly
-    holder.querySelectorAll(".report-page").forEach(function(p){ p.style.borderBottom="none"; p.style.paddingBottom="0"; p.style.marginBottom="0"; });
-    document.body.appendChild(holder);
-    var opt={ margin:[10,10,12,10], filename:reportName(s)+".pdf",
-      image:{type:"jpeg",quality:0.95},
-      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",windowWidth:794},
-      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
-      pagebreak:{mode:["css","legacy"],before:".pgbreak"} };
-    try{ await window.html2pdf().set(opt).from(holder).save(); }
-    finally{ document.body.removeChild(holder); }
+    await ensurePdfLibs();
+    // on-screen render stage (NOT position:fixed, NOT off-screen — html2canvas needs it laid out)
+    stage=document.createElement("div");
+    stage.className="report-paper pdfexport";
+    stage.style.cssText="position:absolute;left:0;top:0;z-index:2147483647;width:794px;background:#fff;padding:26px;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;color:#1f2937";
+    stage.innerHTML=reportHTML(s);
+    stage.querySelectorAll(".report-page").forEach(function(p){ p.style.borderBottom="none"; p.style.paddingBottom="0"; p.style.marginBottom="0"; });
+    document.body.appendChild(stage);
+    window.scrollTo(0,0);
+    await new Promise(function(r){ setTimeout(r,60); });   // let layout + data-URL images settle
+
+    var JsPDF=window.jspdf.jsPDF;
+    var pdf=new JsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+    var pageW=210, pageH=297, margin=10, availW=pageW-margin*2, availH=pageH-margin*2;
+    var pages=stage.querySelectorAll(".report-page");
+    if(!pages.length) pages=[stage];
+    for(var i=0;i<pages.length;i++){
+      var canvas=await window.html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:"#ffffff"});
+      var img=canvas.toDataURL("image/jpeg",0.95);
+      var wmm=availW, hmm=canvas.height*availW/canvas.width, x=margin;
+      if(hmm>availH){ var f=availH/hmm; wmm=availW*f; hmm=availH; x=(pageW-wmm)/2; }   // shrink a too-tall page to fit
+      if(i>0) pdf.addPage();
+      pdf.addImage(img,"JPEG",x,margin,wmm,hmm);
+    }
+    pdf.save(reportName(s)+".pdf");
   }catch(e){
-    if(confirm("Couldn't build the PDF (needs internet the first time). Use the phone's print/save instead?")) window.print();
-  }finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
+    if(confirm("Couldn't build the PDF (it needs internet the first time). Use the phone's print/save instead?")) window.print();
+  }finally{
+    if(stage&&stage.parentNode) stage.parentNode.removeChild(stage);
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+  }
 }
 $("btnPrint").addEventListener("click",function(){ if(current) exportReportPDF(current); });
 $("btnReportBack").addEventListener("click",function(){if(current&&current.status==="open"){openVisit(current);}else{renderLists();$("barSub").textContent="";show("homeView");}});
