@@ -223,6 +223,18 @@
     table.rep.detail tr{page-break-inside:avoid;break-inside:avoid}
     table.sumtab .sum-banner,table.dept-head-tab .dh-v,table.dept-head-tab .dh-s,table.rep th,table.rep.detail td.dcat{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
+  /* PDF export stage: mirror the print typography so headers/tables aren't oversized */
+  .pdfexport table.rep th,.pdfexport table.rep td{border:1px solid #333;padding:3px 6px;font-size:11px}
+  .pdfexport table.rep img{max-height:70px;max-width:85px}
+  .pdfexport .rep-title{font-size:16px}
+  .pdfexport .rep-head{font-size:11.5px;line-height:1.35}
+  .pdfexport .sec-h{font-size:12.5px}.pdfexport .mut-h{font-size:11px}
+  .pdfexport table.sumtab td,.pdfexport table.sumtab th{font-size:12px;padding:3px 8px}
+  .pdfexport .final-score .fs-l{font-size:16px}.pdfexport .final-score .fs-n,.pdfexport .final-score .fs-g{font-size:26px}
+  .pdfexport .sum-body{font-size:12px}
+  .pdfexport table.dept-head-tab td{font-size:12.5px}
+  .pdfexport table.rep.detail th,.pdfexport table.rep.detail td{font-size:9px;padding:1.5px 4px;line-height:1.2}
+  .pdfexport table.rep.detail td.dcat{font-size:9px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -660,7 +672,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ba</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31bb</div>
 </div>
 
 <script>
