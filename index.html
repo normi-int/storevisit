@@ -660,7 +660,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31az</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ba</div>
 </div>
 
 <script>
@@ -2673,21 +2673,84 @@ async function exportReportPDF(s){
     await new Promise(function(r){ setTimeout(r,60); });   // let layout + data-URL images settle
 
     var JsPDF=window.jspdf.jsPDF;
-    var pdf=new JsPDF({unit:"mm",format:"a4",orientation:"portrait"});
-    var pageW=210, pageH=297, margin=10, availW=pageW-margin*2, availH=pageH-margin*2;
-    var pages=stage.querySelectorAll(".report-page");
-    if(!pages.length) pages=[stage];
-    for(var i=0;i<pages.length;i++){
-      var canvas=await window.html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:"#ffffff"});
-      var img=canvas.toDataURL("image/jpeg",0.95);
-      var wmm=availW, hmm=canvas.height*availW/canvas.width, x=margin;
-      if(hmm>availH){ var f=availH/hmm; wmm=availW*f; hmm=availH; x=(pageW-wmm)/2; }   // shrink a too-tall page to fit
-      if(i>0) pdf.addPage();
-      pdf.addImage(img,"JPEG",x,margin,wmm,hmm);
+    var pdf=new JsPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
+    var margin=10, availWmm=210-2*margin, availHmm=297-2*margin;
+    var pageEls=stage.querySelectorAll(".report-page");
+    if(!pageEls.length) pageEls=[stage];
+    var firstAdded=true;
+    for(var pi=0; pi<pageEls.length; pi++){
+      var pageEl=pageEls[pi];
+      var canvas=await window.html2canvas(pageEl,{scale:2,useCORS:true,backgroundColor:"#ffffff"});
+      var pr=pageEl.getBoundingClientRect();
+      var sx=canvas.width/pr.width;                 // css px -> canvas px
+      var mmPerPx=availWmm/canvas.width;            // canvas px -> mm on the sheet
+      var availHpx=availHmm/mmPerPx;                // printable height in canvas px
+      function relTop(el){ return (el.getBoundingClientRect().top - pr.top)*sx; }
+      function relBot(el){ return (el.getBoundingClientRect().bottom - pr.top)*sx; }
+      // Build "atoms" = blocks that must never split across a page.
+      //  · findings tables  -> each row is its own atom
+      //  · F&B tables       -> a category banner + its rows stay together
+      //  · questionnaire    -> each category (tbody) stays together
+      //  · non-table pages  -> each top-level block
+      var headerPx=0, atoms=[];   // atom = {top,bottom, rows:[{top,bottom}...]}
+      var table=pageEl.querySelector("table.rep");
+      var bodyTrs=table?table.querySelectorAll("tbody > tr"):[];
+      if(table && bodyTrs.length){
+        headerPx=Math.max(0, relTop(bodyTrs[0]));   // title + column header — repeated on every page
+        if(table.classList.contains("detail")){     // questionnaire: keep each category (tbody) together
+          table.querySelectorAll("tbody").forEach(function(tb){
+            var rs=tb.querySelectorAll("tr"); if(!rs.length) return;
+            var rows=[]; rs.forEach(function(tr){ rows.push({top:relTop(tr),bottom:relBot(tr)}); });
+            atoms.push({top:rows[0].top,bottom:rows[rows.length-1].bottom,rows:rows});
+          });
+        } else {                                     // findings + F&B
+          var cur=null;
+          bodyTrs.forEach(function(tr){
+            var rr={top:relTop(tr),bottom:relBot(tr)};
+            var fc=tr.firstElementChild;
+            var banner=fc&&fc.hasAttribute("colspan")&&(+fc.getAttribute("colspan"))>=3;   // F&B category banner
+            if(banner){ cur={top:rr.top,bottom:rr.bottom,rows:[rr]}; atoms.push(cur); }
+            else if(cur){ cur.rows.push(rr); cur.bottom=rr.bottom; }
+            else { atoms.push({top:rr.top,bottom:rr.bottom,rows:[rr]}); }
+          });
+        }
+        var lb=atoms.length?atoms[atoms.length-1].bottom:headerPx;
+        if(canvas.height-lb>4) atoms.push({top:lb,bottom:canvas.height,rows:[{top:lb,bottom:canvas.height}]});
+      } else {                                        // non-table page
+        var kids=pageEl.children;
+        if(kids.length){ for(var c=0;c<kids.length;c++){ atoms.push({top:relTop(kids[c]),bottom:relBot(kids[c]),rows:[{top:relTop(kids[c]),bottom:relBot(kids[c])}]}); } }
+        else atoms.push({top:0,bottom:canvas.height,rows:[{top:0,bottom:canvas.height}]});
+      }
+      if(!atoms.length) atoms.push({top:0,bottom:canvas.height,rows:[{top:0,bottom:canvas.height}]});
+      var bodyBudget=Math.max(50, availHpx-headerPx);
+      // flatten atoms into contiguous "units"; an atom taller than one page is broken into its rows
+      var units=[];
+      atoms.forEach(function(a){
+        if((a.bottom-a.top)<=bodyBudget){ units.push({top:a.top,bottom:a.bottom}); }
+        else { a.rows.forEach(function(r){ units.push({top:r.top,bottom:r.bottom}); }); }
+      });
+      // pack units greedily into page-height segments (a unit never straddles a page)
+      var segs=[], si=0, start=units[0].top;
+      while(si<units.length){
+        var j=si;
+        while(j+1<units.length && (units[j+1].bottom-start)<=bodyBudget) j++;
+        segs.push({s:start,e:units[j].bottom}); start=units[j].bottom; si=j+1;
+      }
+      for(var g=0; g<segs.length; g++){
+        var bodyH=segs[g].e-segs[g].s, hasHdr=headerPx>0;
+        var tmp=document.createElement("canvas"); tmp.width=canvas.width; tmp.height=Math.max(1,Math.round((hasHdr?headerPx:0)+bodyH));
+        var cx=tmp.getContext("2d"); cx.fillStyle="#ffffff"; cx.fillRect(0,0,tmp.width,tmp.height);
+        var y=0;
+        if(hasHdr){ cx.drawImage(canvas,0,0,canvas.width,headerPx,0,0,canvas.width,headerPx); y=headerPx; }
+        cx.drawImage(canvas,0,segs[g].s,canvas.width,bodyH,0,y,canvas.width,bodyH);
+        if(!firstAdded) pdf.addPage();
+        pdf.addImage(tmp.toDataURL("image/jpeg",0.95),"JPEG",margin,margin,availWmm,tmp.height*mmPerPx);
+        firstAdded=false;
+      }
     }
     pdf.save(reportName(s)+".pdf");
   }catch(e){
-    if(confirm("Couldn't build the PDF (it needs internet the first time). Use the phone's print/save instead?")) window.print();
+    alert("Couldn't build the PDF. It needs internet the first time — please check your connection and tap Export PDF again.");
   }finally{
     if(stage&&stage.parentNode) stage.parentNode.removeChild(stage);
     if(btn){ btn.disabled=false; btn.textContent=old; }
