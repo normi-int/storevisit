@@ -180,7 +180,7 @@
   .p1sum{padding-left:10px}   /* page-1 SUMMARY heading + body align with the table labels */
   .final-score .fs-l{font-size:20px;font-weight:800;letter-spacing:.02em}
   .final-score .fs-n,.final-score .fs-g{font-size:34px;font-weight:800;line-height:1;display:block}
-  .sum-body{font-size:14px;line-height:1.55;white-space:normal;margin-top:2px}
+  .sum-body{font-size:14px;line-height:1.55;white-space:normal;margin-top:2px;text-align:justify}
   .rec-dept{margin:6px 0 4px}
   .rec-dept .rec-d{font-weight:800;font-size:13.5px;margin:6px 0 1px}
   .rec-list{margin:0 0 4px 0;padding-left:20px}
@@ -428,7 +428,7 @@
       </div>
       <div id="reportActionsDone">
         <div class="btnrow3">
-          <button class="btn proceed" id="btnPrint">Save as PDF / Print</button>
+          <button class="btn proceed" id="btnPrint">⬇ Export PDF</button>
           <button class="btn add hide" id="btnEditReport">+ Add more entries</button>
           <button class="btn back" id="btnReportBack">← Back</button>
         </div>
@@ -660,7 +660,7 @@
     <div class="card noprint"><button class="btn back" id="btnSettingsBack">← Back</button></div>
   </section>
 
-  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31aw</div>
+  <div class="noprint" style="text-align:center;color:var(--muted);font-size:10px;padding:10px 0 20px">build 2026-07-31ay</div>
 </div>
 
 <script>
@@ -2641,7 +2641,40 @@ function scorePage(s,c){
     "<table class='rep'><thead><tr><th>Category</th><th style='width:70px;text-align:center'>Answered</th><th style='width:60px;text-align:center'>Score</th></tr></thead><tbody>"+rows+"</tbody></table>";
 }
 function deptInline(f){var d=(f.depts||[]);return d.length?" <span class='muted'>["+d.join(", ")+"]</span>":"";}
-$("btnPrint").addEventListener("click",function(){window.print();});
+/* ---- Clean PDF export (no browser print dialog) ---- */
+function ensureHtml2pdf(){
+  return new Promise(function(res,rej){
+    if(window.html2pdf) return res();
+    var sc=document.createElement("script");
+    sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+    sc.onload=function(){ res(); }; sc.onerror=function(){ rej(new Error("Could not load PDF library")); };
+    document.head.appendChild(sc);
+  });
+}
+async function exportReportPDF(s){
+  var btn=$("btnPrint"), old=btn?btn.textContent:"";
+  try{
+    if(btn){ btn.disabled=true; btn.textContent="Building PDF…"; }
+    await ensureHtml2pdf();
+    var holder=document.createElement("div");
+    holder.className="report-paper pdfexport";
+    holder.style.cssText="position:fixed;left:-10000px;top:0;width:794px;background:#fff;padding:26px;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;color:#1f2937";
+    holder.innerHTML=reportHTML(s);
+    // strip the on-screen page dividers so pages break cleanly
+    holder.querySelectorAll(".report-page").forEach(function(p){ p.style.borderBottom="none"; p.style.paddingBottom="0"; p.style.marginBottom="0"; });
+    document.body.appendChild(holder);
+    var opt={ margin:[10,10,12,10], filename:reportName(s)+".pdf",
+      image:{type:"jpeg",quality:0.95},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",windowWidth:794},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+      pagebreak:{mode:["css","legacy"],before:".pgbreak"} };
+    try{ await window.html2pdf().set(opt).from(holder).save(); }
+    finally{ document.body.removeChild(holder); }
+  }catch(e){
+    if(confirm("Couldn't build the PDF (needs internet the first time). Use the phone's print/save instead?")) window.print();
+  }finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
+}
+$("btnPrint").addEventListener("click",function(){ if(current) exportReportPDF(current); });
 $("btnReportBack").addEventListener("click",function(){if(current&&current.status==="open"){openVisit(current);}else{renderLists();$("barSub").textContent="";show("homeView");}});
 $("btnCopy").addEventListener("click",function(){
   var s=current, lines=[];
